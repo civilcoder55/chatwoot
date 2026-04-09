@@ -16,8 +16,8 @@ const (
 	EnvRecordingDir  = "GATEWAY_RECORDING_DIR"
 	EnvWebhookURL    = "CHATWOOT_WEBHOOK_URL"
 	EnvWebhookSecret = "CHATWOOT_WEBHOOK_SECRET"
-	EnvAsteriskHost  = "ASTERISK_HOST"
-	EnvAsteriskPort  = "ASTERISK_PORT"
+	EnvSIPServerHost = "SIP_SERVER_HOST"
+	EnvSIPServerPort = "SIP_SERVER_PORT"
 	EnvPublicIP      = "GATEWAY_PUBLIC_IP"
 	EnvICETCPPort    = "GATEWAY_ICE_TCP_PORT"
 	EnvICETCPAddr    = "GATEWAY_ICE_TCP_ADDR"
@@ -32,8 +32,8 @@ const (
 	DefaultRecordingDir  = "/recordings"
 	DefaultWebhookURL    = "http://127.0.0.1:3000/webhooks/sip_gateway/events"
 	DefaultWebhookSecret = "test"
-	DefaultAsteriskHost  = "127.0.0.1"
-	DefaultAsteriskPort  = "5060"
+	DefaultSIPServerHost = "127.0.0.1"
+	DefaultSIPServerPort = "5060"
 	DefaultPublicIP      = "127.0.0.1"
 	DefaultICETCPPort    = 9565
 	DefaultFallbackIP    = "0.0.0.0"
@@ -49,8 +49,8 @@ type Config struct {
 	RecordingDir  string
 	WebhookURL    string
 	WebhookSecret string
-	AsteriskHost  string
-	AsteriskPort  string
+	SIPServerHost string
+	SIPServerPort string
 	PublicIP      string
 	ICETCPPort    int
 	ICETCPAddr    string
@@ -66,8 +66,8 @@ func Load() *Config {
 		RecordingDir:  envOr(EnvRecordingDir, DefaultRecordingDir),
 		WebhookURL:    envOr(EnvWebhookURL, DefaultWebhookURL),
 		WebhookSecret: envOr(EnvWebhookSecret, DefaultWebhookSecret),
-		AsteriskHost:  envOr(EnvAsteriskHost, DefaultAsteriskHost),
-		AsteriskPort:  envOr(EnvAsteriskPort, DefaultAsteriskPort),
+		SIPServerHost: envOr(EnvSIPServerHost, DefaultSIPServerHost),
+		SIPServerPort: envOr(EnvSIPServerPort, DefaultSIPServerPort),
 		PublicIP:      envOr(EnvPublicIP, DefaultPublicIP),
 		ICETCPPort:    envOrInt(EnvICETCPPort, DefaultICETCPPort),
 		ICETCPAddr:    envOr(EnvICETCPAddr, DefaultICETCPAddr),
@@ -103,7 +103,7 @@ func (c *Config) log() {
 		Str("stun_server", c.STUNServer).
 		Str("recording_dir", c.RecordingDir).
 		Str("webhook_url", c.WebhookURL).
-		Str("asterisk", c.AsteriskHost+":"+c.AsteriskPort).
+		Str("sip_server", c.SIPServerHost+":"+c.SIPServerPort).
 		Int("ice_tcp_port", c.ICETCPPort).
 		Str("ice_tcp_addr", c.ICETCPAddr).
 		Msg("configuration loaded")

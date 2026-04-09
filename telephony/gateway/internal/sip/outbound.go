@@ -37,12 +37,12 @@ func (s *Server) SendInvite(ctx context.Context, session *call.Session) error {
 
 	localPort := conn.LocalAddr().(*net.UDPAddr).Port
 	sipSDP := generateSIPSDP(gatewayIP, localPort)
-	target := fmt.Sprintf("sip:%s@%s:%s", session.To, s.cfg.AsteriskHost, s.cfg.AsteriskPort)
+	target := fmt.Sprintf("sip:%s@%s:%s", session.To, s.cfg.SIPServerHost, s.cfg.SIPServerPort)
 
 	req := sip.NewRequest(sip.INVITE, sip.Uri{
 		User: session.To,
-		Host: s.cfg.AsteriskHost,
-		Port: parsePort(s.cfg.AsteriskPort),
+		Host: s.cfg.SIPServerHost,
+		Port: parsePort(s.cfg.SIPServerPort),
 	})
 	req.SetBody([]byte(sipSDP))
 	req.AppendHeader(sip.NewHeader("Content-Type", "application/sdp"))
