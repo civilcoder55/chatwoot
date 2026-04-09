@@ -2,16 +2,16 @@ require 'rails_helper'
 
 RSpec.describe Sip::GatewayClient, type: :service do
   let(:channel) do
-    instance_double(Channel::Sip, gateway_url: 'http://sip-gateway.test', webhook_secret: 'secret-token')
+    instance_double(Channel::Sip, api_key: 'secret-token', phone_number: '+15550001111')
   end
   let(:client) { described_class.new(channel) }
-
+  ENV['SIP_GATEWAY_URL'] = 'http://sip-gateway.test'
   describe '#initiate_call' do
     it 'posts to /calls/initiate and returns parsed response' do
       stub_request(:post, 'http://sip-gateway.test/calls/initiate')
         .with(
           body: { from: '+15550001111', to: '+15550002222', sdp_offer: 'offer-sdp' }.to_json,
-          headers: { 'Content-Type' => 'application/json', 'X-Gateway-Secret' => 'secret-token' }
+          headers: { 'Content-Type' => 'application/json', 'X-Api-Key' => 'secret-token', 'X-Phone-Number' => '+15550001111' }
         )
         .to_return(status: 200, body: { call_id: 'call-123', sdp_answer: 'answer-sdp' }.to_json, headers: { 'Content-Type' => 'application/json' })
 
@@ -36,7 +36,7 @@ RSpec.describe Sip::GatewayClient, type: :service do
       stub_request(:post, 'http://sip-gateway.test/calls/call-123/accept')
         .with(
           body: { sdp_answer: 'answer-sdp' }.to_json,
-          headers: { 'Content-Type' => 'application/json', 'X-Gateway-Secret' => 'secret-token' }
+          headers: { 'Content-Type' => 'application/json', 'X-Api-Key' => 'secret-token', 'X-Phone-Number' => '+15550001111' }
         )
         .to_return(status: 200, body: { ok: true }.to_json, headers: { 'Content-Type' => 'application/json' })
 
@@ -59,7 +59,7 @@ RSpec.describe Sip::GatewayClient, type: :service do
       stub_request(:post, 'http://sip-gateway.test/calls/call-123/reject')
         .with(
           body: {}.to_json,
-          headers: { 'Content-Type' => 'application/json', 'X-Gateway-Secret' => 'secret-token' }
+          headers: { 'Content-Type' => 'application/json', 'X-Api-Key' => 'secret-token', 'X-Phone-Number' => '+15550001111' }
         )
         .to_return(status: 200, body: { ok: true }.to_json, headers: { 'Content-Type' => 'application/json' })
 
@@ -73,7 +73,7 @@ RSpec.describe Sip::GatewayClient, type: :service do
       stub_request(:post, 'http://sip-gateway.test/calls/call-123/terminate')
         .with(
           body: {}.to_json,
-          headers: { 'Content-Type' => 'application/json', 'X-Gateway-Secret' => 'secret-token' }
+          headers: { 'Content-Type' => 'application/json', 'X-Api-Key' => 'secret-token', 'X-Phone-Number' => '+15550001111' }
         )
         .to_return(status: 200, body: { ok: true }.to_json, headers: { 'Content-Type' => 'application/json' })
 

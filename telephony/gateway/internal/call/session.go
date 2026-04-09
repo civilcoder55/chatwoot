@@ -79,3 +79,11 @@ func (s *Session) Close() {
 		_ = s.OutboundDlg.Close()
 	}
 }
+
+func (s *Session) IsInbound() bool {
+	return s.Direction == DirectionInbound
+}
+
+func (s *Session) IsOutbound() bool {
+	return s.Direction == DirectionOutbound
+}

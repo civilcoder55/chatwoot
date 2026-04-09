@@ -10,6 +10,7 @@ import (
 
 	"gateway/internal/call"
 	"gateway/internal/config"
+	"gateway/internal/tenant"
 	"gateway/internal/webhook"
 
 	"github.com/emiago/sipgo"
@@ -30,6 +31,7 @@ type Server struct {
 	cfg       *config.Config
 	registry  *call.Registry
 	webhook   *webhook.Client
+	tenants   *tenant.Store
 	server    *sipgo.Server
 	ua        *sipgo.UserAgent
 	dialogSrv *sipgo.DialogServerCache
@@ -37,7 +39,7 @@ type Server struct {
 }
 
 // NewServer creates a SIP server with inbound/outbound call handling.
-func NewServer(cfg *config.Config, registry *call.Registry, wh *webhook.Client) (*Server, error) {
+func NewServer(cfg *config.Config, registry *call.Registry, wh *webhook.Client, ts *tenant.Store) (*Server, error) {
 	ua, err := sipgo.NewUA(sipgo.WithUserAgent(userAgentName))
 	if err != nil {
 		return nil, fmt.Errorf("create SIP user agent: %w", err)
@@ -58,6 +60,7 @@ func NewServer(cfg *config.Config, registry *call.Registry, wh *webhook.Client) 
 		cfg:       cfg,
 		registry:  registry,
 		webhook:   wh,
+		tenants:   ts,
 		server:    srv,
 		ua:        ua,
 		dialogSrv: sipgo.NewDialogServerCache(client, contact),

@@ -372,15 +372,10 @@
           "PLACEHOLDER": "Enter your SIP phone number (e.g. +1234567890)",
           "ERROR": "Please provide a valid phone number in E.164 format (e.g. +1234567890)"
         },
-        "GATEWAY_URL": {
-          "LABEL": "Gateway URL",
-          "PLACEHOLDER": "Enter your SIP gateway URL (e.g. https://gateway.example.com)",
-          "ERROR": "Please provide a valid gateway URL"
-        },
-        "WEBHOOK_SECRET": {
-          "LABEL": "Webhook Secret",
-          "PLACEHOLDER": "Enter a webhook secret for securing callbacks",
-          "ERROR": "Webhook secret is required"
+        "API_KEY": {
+          "LABEL": "API Key",
+          "PLACEHOLDER": "Enter your gateway tenant API key",
+          "ERROR": "API key is required"
         },
         "SUBMIT_BUTTON": "Create SIP Channel",
         "API": {

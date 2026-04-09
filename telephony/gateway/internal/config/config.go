@@ -14,14 +14,15 @@ const (
 	EnvHTTPPort      = "GATEWAY_HTTP_PORT"
 	EnvSTUNServer    = "GATEWAY_STUN_SERVER"
 	EnvRecordingDir  = "GATEWAY_RECORDING_DIR"
-	EnvWebhookURL    = "CHATWOOT_WEBHOOK_URL"
-	EnvWebhookSecret = "CHATWOOT_WEBHOOK_SECRET"
+	EnvWebhookURL    = "WEBHOOK_URL"
+	EnvWebhookSecret = "WEBHOOK_SECRET"
 	EnvSIPServerHost = "SIP_SERVER_HOST"
 	EnvSIPServerPort = "SIP_SERVER_PORT"
 	EnvPublicIP      = "GATEWAY_PUBLIC_IP"
 	EnvICETCPPort    = "GATEWAY_ICE_TCP_PORT"
 	EnvICETCPAddr    = "GATEWAY_ICE_TCP_ADDR"
 	EnvICENATIP      = "GATEWAY_ICE_NAT_IP"
+	EnvTenantsFile   = "GATEWAY_TENANTS_FILE"
 )
 
 // Default configuration values.
@@ -39,6 +40,7 @@ const (
 	DefaultFallbackIP    = "0.0.0.0"
 	DefaultICETCPAddr    = "0.0.0.0"
 	DefaultICENATIP      = ""
+	DefaultTenantsFile   = "tenants.yaml"
 )
 
 // Config holds all gateway configuration values.
@@ -55,6 +57,7 @@ type Config struct {
 	ICETCPPort    int
 	ICETCPAddr    string
 	ICENATIP      string
+	TenantsFile   string
 }
 
 // Load reads configuration from environment variables, falling back to defaults.
@@ -72,6 +75,7 @@ func Load() *Config {
 		ICETCPPort:    envOrInt(EnvICETCPPort, DefaultICETCPPort),
 		ICETCPAddr:    envOr(EnvICETCPAddr, DefaultICETCPAddr),
 		ICENATIP:      envOr(EnvICENATIP, DefaultICENATIP),
+		TenantsFile:   envOr(EnvTenantsFile, DefaultTenantsFile),
 	}
 
 	cfg.log()

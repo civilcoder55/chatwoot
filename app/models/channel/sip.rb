@@ -3,9 +3,9 @@ class Channel::Sip < ApplicationRecord
 
   self.table_name = 'channel_sip'
 
+  before_validation :ensure_valid_tenant, on: :create
   validates :phone_number, presence: true, uniqueness: true, format: { with: /\A\+[1-9]\d{1,14}\z/ }
   validates :provider_config, presence: true
-  validate :validate_gateway_url
 
   EDITABLE_ATTRS = [:phone_number, { provider_config: {} }].freeze
 
@@ -17,21 +17,17 @@ class Channel::Sip < ApplicationRecord
     false
   end
 
-  def gateway_url
-    provider_config['gateway_url']
-  end
-
-  def webhook_secret
-    provider_config['webhook_secret']
+  def api_key
+    provider_config['api_key']
   end
 
   private
 
-  # [IIHT] check if valid URL or a valid gateway. not all URLs are valid sip gateways
-  # we can discuss more on my intention here
-  def validate_gateway_url
-    return if provider_config.blank?
+  def ensure_valid_tenant
+    return unless phone_number.present? && api_key.present?
 
-    errors.add(:provider_config, 'gateway_url is required') if provider_config['gateway_url'].blank?
+    unless Sip::GatewayClient.new(self).validate_tenant
+      errors.add(:base, 'invalid tenant credentials')
+    end
   end
 end

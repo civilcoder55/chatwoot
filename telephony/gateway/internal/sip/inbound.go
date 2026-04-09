@@ -50,6 +50,12 @@ func (s *Server) handleInvite(req *sip.Request, tx sip.ServerTransaction) {
 		return
 	}
 
+	if s.tenants.FindByPhone(to) == nil {
+		_ = dlg.Close()
+		log.Info().Str("call_id", callID).Str("phone", to).Msg("no tenant found for inbound call")
+		return
+	}
+
 	sessionCtx, cancel := context.WithCancel(context.Background())
 	session := &call.Session{
 		CallID:     callID,

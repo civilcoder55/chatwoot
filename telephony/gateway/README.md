@@ -43,8 +43,21 @@ All settings are configured via environment variables:
 | `GATEWAY_ICE_TCP_PORT` | `9565` | TCP port for ICE/WebRTC (TCP for more reliable connections fits more for local testing, but of course on production we'd use UDP for better performance) |
 | `SIP_SERVER_HOST` | `127.0.0.1` | SIP server host |
 | `SIP_SERVER_PORT` | `5060` | SIP server port |
-| `CHATWOOT_WEBHOOK_URL` | `http://127.0.0.1:3000/webhooks/sip_gateway/events` | Chatwoot webhook endpoint to receive call events |
-| `CHATWOOT_WEBHOOK_SECRET` | `test` | Shared secret for webhook auth (something simple for demo but in production we should use a more secure way to authenticate) |
+| `WEBHOOK_URL` | `http://127.0.0.1:3000/webhooks/sip_gateway/events` | Chatwoot webhook endpoint to receive call events |
+| `WEBHOOK_SECRET` | `test` | Secret for webhook authentication |
+| `GATEWAY_TENANTS_FILE` | `tenants.yaml` | Path to the tenants YAML file |
+
+## Tenant Configuration
+
+The gateway uses a YAML file to define tenants. Each tenant maps a phone number to an API key used for API authentication and inbound call routing.
+
+```yaml
+tenants:
+  - phone_number: "+1234567890"
+    key: "tenant-key-1"
+```
+
+Inbound calls are only accepted for phone numbers that have a matching tenant entry. API requests must include `X-Phone-Number` and `X-Api-Key` headers matching a configured tenant.
 
 ## Running
 
@@ -55,9 +68,11 @@ docker-compose up -d
 
 ## HTTP API
 
-All endpoints (except `/health`) require the `X-Gateway-Secret` header.
-> Again the secret here is just a placeholder simulating a security layer
+All endpoints (except `/health`) require the `X-Phone-Number` and `X-Api-Key` headers matching a configured tenant.
 
+### `POST /validate`
+
+Validate tenant credentials. Returns `{"valid": true}` if the headers are correct.
 
 ### `POST /calls/initiate`
 
@@ -111,7 +126,7 @@ The gateway sends these events to Chatwoot:
 
 > **Note:** The `phone_number` field is used to identify the channel associated with the call, which is useful for routing. (Like number and DID in VoIP)
 
-When a call has a recording, the gateway also uploads the WAV file to `POST /webhooks/sip_gateway/recordings` using the same `X-Gateway-Secret` header. Chatwoot stores it in Active Storage and updates the voice-call message `recording_url`.
+When a call has a recording, the gateway also uploads the WAV file to `POST /webhooks/sip_gateway/recordings`. Chatwoot stores it in Active Storage and updates the voice-call message `recording_url`.
 
 ### Termination Reasons
 
@@ -149,6 +164,7 @@ internal/
     lifecycle.go          Call termination (BYE, CANCEL, cleanup)
     helpers.go            SDP generation/parsing, phone extraction
     reason.go             Hangup reason and status mapping
+  tenant/                 YAML-backed tenant registry
   webhook/                Webhook delivery client
   webrtc/                 WebRTC peer connection management
 ```

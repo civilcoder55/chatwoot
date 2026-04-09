@@ -1,7 +1,14 @@
 class Sip::GatewayClient
   def initialize(channel)
-    @gateway_url = channel.gateway_url
-    @secret = channel.webhook_secret
+    @api_key = channel.api_key
+    @phone_number = channel.phone_number
+  end
+
+  def validate_tenant
+    response = post('/validate', {})
+    response['valid'] == true
+  rescue StandardError
+    false
   end
 
   def initiate_call(from:, to:, sdp_offer:)
@@ -23,9 +30,12 @@ class Sip::GatewayClient
   private
 
   def post(path, body)
+    url = ENV.fetch('SIP_GATEWAY_URL', nil)
+    raise StandardError, 'SIP_GATEWAY_URL not configured' if url.blank?
+
     response = HTTParty.post(
-      "#{@gateway_url}#{path}",
-      headers: { 'Content-Type' => 'application/json', 'X-Gateway-Secret' => @secret },
+      "#{url}#{path}",
+      headers: { 'Content-Type' => 'application/json', 'X-Api-Key' => @api_key, 'X-Phone-Number' => @phone_number },
       body: body.to_json,
       timeout: 10
     )

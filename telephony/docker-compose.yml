@@ -23,8 +23,8 @@ services:
       GATEWAY_STUN_SERVER: "stun:stun.l.google.com:19302"
       GATEWAY_RECORDING_DIR: "/recordings"
       GATEWAY_PUBLIC_IP: "192.168.107.3"
-      CHATWOOT_WEBHOOK_URL: "http://rails:3000/webhooks/sip_gateway/events"
-      CHATWOOT_WEBHOOK_SECRET: "test"
+      WEBHOOK_URL: "http://rails:3000/webhooks/sip_gateway/events"
+      WEBHOOK_SECRET: "test"
       SIP_SERVER_HOST: "192.168.107.2"
       SIP_SERVER_PORT: "5060"
       GATEWAY_ICE_TCP_PORT: "9050"
@@ -33,6 +33,7 @@ services:
 
     volumes:
       - ./recordings:/recordings
+      - ./gateway/tenants.yaml:/tenants.yaml
     depends_on:
       - asterisk
     networks:

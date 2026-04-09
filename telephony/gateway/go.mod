@@ -10,6 +10,7 @@ require (
 	github.com/pion/rtp v1.8.12
 	github.com/pion/webrtc/v4 v4.0.12
 	github.com/rs/zerolog v1.33.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (

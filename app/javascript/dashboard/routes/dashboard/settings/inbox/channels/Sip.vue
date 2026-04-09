@@ -18,16 +18,14 @@ const router = useRouter();
 
 const state = reactive({
   phoneNumber: '',
-  gatewayUrl: '',
-  webhookSecret: '',
+  apiKey: '',
 });
 
 const uiFlags = useMapGetter('inboxes/getUIFlags');
 
 const validationRules = {
   phoneNumber: { required, isPhoneE164 },
-  gatewayUrl: { required, url },
-  webhookSecret: { required },
+  apiKey: { required },
 };
 
 const v$ = useVuelidate(validationRules, state);
@@ -37,11 +35,8 @@ const formErrors = computed(() => ({
   phoneNumber: v$.value.phoneNumber?.$error
     ? t('INBOX_MGMT.ADD.SIP.PHONE_NUMBER.ERROR')
     : '',
-  gatewayUrl: v$.value.gatewayUrl?.$error
-    ? t('INBOX_MGMT.ADD.SIP.GATEWAY_URL.ERROR')
-    : '',
-  webhookSecret: v$.value.webhookSecret?.$error
-    ? t('INBOX_MGMT.ADD.SIP.WEBHOOK_SECRET.ERROR')
+  apiKey: v$.value.apiKey?.$error
+    ? t('INBOX_MGMT.ADD.SIP.API_KEY.ERROR')
     : '',
 }));
 
@@ -55,8 +50,7 @@ async function createChannel() {
       sip: {
         phone_number: state.phoneNumber,
         provider_config: {
-          gateway_url: state.gatewayUrl,
-          webhook_secret: state.webhookSecret,
+          api_key: state.apiKey,
         },
       },
     });
@@ -94,22 +88,13 @@ async function createChannel() {
       />
 
       <Input
-        v-model="state.gatewayUrl"
-        :label="t('INBOX_MGMT.ADD.SIP.GATEWAY_URL.LABEL')"
-        :placeholder="t('INBOX_MGMT.ADD.SIP.GATEWAY_URL.PLACEHOLDER')"
-        :message="formErrors.gatewayUrl"
-        :message-type="formErrors.gatewayUrl ? 'error' : 'info'"
-        @blur="v$.gatewayUrl?.$touch"
-      />
-
-      <Input
-        v-model="state.webhookSecret"
+        v-model="state.apiKey"
         type="password"
-        :label="t('INBOX_MGMT.ADD.SIP.WEBHOOK_SECRET.LABEL')"
-        :placeholder="t('INBOX_MGMT.ADD.SIP.WEBHOOK_SECRET.PLACEHOLDER')"
-        :message="formErrors.webhookSecret"
-        :message-type="formErrors.webhookSecret ? 'error' : 'info'"
-        @blur="v$.webhookSecret?.$touch"
+        :label="t('INBOX_MGMT.ADD.SIP.API_KEY.LABEL')"
+        :placeholder="t('INBOX_MGMT.ADD.SIP.API_KEY.PLACEHOLDER')"
+        :message="formErrors.apiKey"
+        :message-type="formErrors.apiKey ? 'error' : 'info'"
+        @blur="v$.apiKey?.$touch"
       />
 
       <div>

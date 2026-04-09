@@ -47,12 +47,8 @@ func NewClient(url, secret string) *Client {
 }
 
 // Send delivers an event with the given data payload.
-func (c *Client) Send(event string, data map[string]any) error {
-	return c.SendContext(context.Background(), event, data)
-}
 
-// SendContext delivers an event with the given data payload, respecting the context.
-func (c *Client) SendContext(ctx context.Context, event string, data map[string]any) error {
+func (c *Client) Send(event string, data map[string]any) error {
 	payload := map[string]any{
 		"event": event,
 		"data":  data,
@@ -63,7 +59,7 @@ func (c *Client) SendContext(ctx context.Context, event string, data map[string]
 		return fmt.Errorf("marshal webhook payload: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.url, bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, c.url, bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("create webhook request: %w", err)
 	}
@@ -86,18 +82,14 @@ func (c *Client) SendContext(ctx context.Context, event string, data map[string]
 }
 
 // UploadRecording sends a finished recording file to Chatwoot for Active Storage attachment.
-func (c *Client) UploadRecording(callID, recordingPath string) error {
-	return c.UploadRecordingContext(context.Background(), callID, recordingPath)
-}
 
-// UploadRecordingContext sends a finished recording file to Chatwoot, respecting the context.
-func (c *Client) UploadRecordingContext(ctx context.Context, callID, recordingPath string) error {
+func (c *Client) UploadRecording(callID, recordingPath string) error {
 	bodyReader, contentType, err := buildRecordingBody(callID, recordingPath)
 	if err != nil {
 		return err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.recordingURL(), bodyReader)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, c.recordingURL(), bodyReader)
 	if err != nil {
 		return fmt.Errorf("create recording upload request: %w", err)
 	}

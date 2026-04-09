@@ -31,7 +31,7 @@ class Webhooks::SipGatewayController < ActionController::API
 
   def authenticate_gateway!
     gateway_secret = request.headers['X-Gateway-Secret'].to_s
-    expected_secret = ENV.fetch('GATEWAY_WEBHOOK_SECRET', 'test')
+    expected_secret = ENV.fetch('SIP_GATEWAY_SECRET', 'test')
 
     return if gateway_secret.bytesize == expected_secret.bytesize &&
               ActiveSupport::SecurityUtils.secure_compare(gateway_secret, expected_secret)

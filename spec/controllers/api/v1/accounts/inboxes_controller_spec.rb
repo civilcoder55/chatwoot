@@ -435,11 +435,12 @@ RSpec.describe 'Inboxes API', type: :request do
       end
 
       it 'creates a sip inbox when administrator' do
+        allow(Sip::GatewayClient).to receive(:new).with(anything).and_return( instance_double(Sip::GatewayClient, validate_tenant: true) )
         post "/api/v1/accounts/#{account.id}/inboxes",
              headers: admin.create_new_auth_token,
              params: { name: 'SIP Inbox',
                        channel: { type: 'sip', phone_number: '+15551234567',
-                                  provider_config: { gateway_url: 'http://sip-gateway.test', webhook_secret: 'secret' } } },
+                                  provider_config: { api_key: 'secret' } } },
              as: :json
 
         expect(response).to have_http_status(:success)
@@ -449,7 +450,6 @@ RSpec.describe 'Inboxes API', type: :request do
         expect(inbox).to be_present
         expect(inbox.channel).to be_a(Channel::Sip)
         expect(inbox.channel.phone_number).to eq('+15551234567')
-        expect(inbox.channel.gateway_url).to eq('http://sip-gateway.test')
       end
 
       it 'returns error when sip inbox phone_number is invalid' do
@@ -457,17 +457,6 @@ RSpec.describe 'Inboxes API', type: :request do
              headers: admin.create_new_auth_token,
              params: { name: 'Bad SIP',
                        channel: { type: 'sip', phone_number: 'not-a-phone',
-                                  provider_config: { gateway_url: 'http://sip-gateway.test' } } },
-             as: :json
-
-        expect(response).to have_http_status(:unprocessable_entity)
-      end
-
-      it 'returns error when sip inbox gateway_url is missing' do
-        post "/api/v1/accounts/#{account.id}/inboxes",
-             headers: admin.create_new_auth_token,
-             params: { name: 'Bad SIP',
-                       channel: { type: 'sip', phone_number: '+15551234568',
                                   provider_config: {} } },
              as: :json
 

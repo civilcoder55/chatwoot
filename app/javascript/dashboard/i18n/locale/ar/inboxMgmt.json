@@ -364,15 +364,10 @@
           "PLACEHOLDER": "أدخل رقم هاتف SIP الخاص بك (مثلاً +1234567890)",
           "ERROR": "يرجى تقديم رقم هاتف صالح بتنسيق E.164 (مثلاً +1234567890)"
         },
-        "GATEWAY_URL": {
-          "LABEL": "عنوان URL للبوابة",
-          "PLACEHOLDER": "أدخل عنوان URL لبوابة SIP الخاصة بك (مثلاً https://gateway.example.com)",
-          "ERROR": "يرجى تقديم عنوان URL صالح للبوابة"
-        },
-        "WEBHOOK_SECRET": {
-          "LABEL": "رمز الأمان للـ Webhook",
-          "PLACEHOLDER": "أدخل رمز الأمان للـ Webhook لتأمين الـ callbacks",
-          "ERROR": "مطلوب رمز الأمان للـ Webhook"
+        "API_KEY": {
+          "LABEL": "مفتاح API",
+          "PLACEHOLDER": "أدخل مفتاح API للبوابة",
+          "ERROR": "مطلوب مفتاح API"
         },
         "SUBMIT_BUTTON": "إنشاء قناة SIP",
         "API": {

@@ -141,5 +141,4 @@ end
 ## SIP Channel Attributes
 if resource.sip?
   json.sip_phone_number resource.channel.try(:phone_number)
-  json.sip_gateway_url resource.channel.try(:gateway_url)
 end
