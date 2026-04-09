@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { useMessageContext } from '../provider.js';
 import { MESSAGE_TYPES, VOICE_CALL_STATUS } from '../constants';
 import { acceptWhatsappCallById } from 'dashboard/composables/useWhatsappCallSession';
+import { acceptSipCallById } from 'dashboard/composables/useSipCallSession';
 
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 import BaseBubble from 'next/message/bubbles/Base.vue';
@@ -47,7 +48,10 @@ const isFailed = computed(() =>
 
 // Call source and metadata — all camelCase due to deep transform
 const isWhatsappCall = computed(() => data.value?.callSource === 'whatsapp');
+const isSipCall = computed(() => data.value?.callSource === 'sip');
+const callSid = computed(() => data.value?.callSid);
 const waCallId = computed(() => data.value?.waCallId);
+const sipCallId = computed(() => data.value?.sipCallId);
 const acceptedBy = computed(() => data.value?.acceptedBy);
 const durationSeconds = computed(() => data.value?.durationSeconds);
 const recordingUrl = computed(() => data.value?.recordingUrl);
@@ -67,8 +71,8 @@ const formattedDuration = computed(() => {
 // WhatsApp: only ringing (peer-to-peer WebRTC — cannot rejoin after accept)
 // Twilio: ringing + in-progress (conference model supports rejoin)
 const showJoinButton = computed(() => {
-  if (isWhatsappCall.value) {
-    return status.value === VOICE_CALL_STATUS.RINGING;
+  if (isWhatsappCall.value || isSipCall.value) {
+    return !isOutbound.value && status.value === VOICE_CALL_STATUS.RINGING;
   }
   return [VOICE_CALL_STATUS.RINGING, VOICE_CALL_STATUS.IN_PROGRESS].includes(
     status.value
@@ -76,7 +80,10 @@ const showJoinButton = computed(() => {
 });
 
 const joinButtonLabel = computed(() => {
-  if (isWhatsappCall.value && status.value === VOICE_CALL_STATUS.RINGING) {
+  if (
+    (isWhatsappCall.value || isSipCall.value) &&
+    status.value === VOICE_CALL_STATUS.RINGING
+  ) {
     return 'CONVERSATION.VOICE_CALL.ACCEPT_CALL';
   }
   return 'CONVERSATION.VOICE_CALL.JOIN_CALL';
@@ -140,10 +147,18 @@ const handleJoinCall = async () => {
           params: { conversation_id: result.call.conversationId },
         });
       }
+    } else if (isSipCall.value) {
+      const result = await acceptSipCallById(sipCallId.value);
+      if (result?.success && result.call) {
+        router.push({
+          name: 'inbox_conversation',
+          params: { conversation_id: result.call.conversationId },
+        });
+      }
     }
   } catch (err) {
     // eslint-disable-next-line no-console
-    console.error('[WhatsApp Call] Accept from bubble failed:', err);
+    console.error('[Call] Accept from bubble failed:', err);
   } finally {
     isJoining.value = false;
   }
@@ -187,6 +202,12 @@ const handleJoinCall = async () => {
             class="text-xs text-n-slate-10"
           >
             {{ formattedDuration }}
+          </span>
+          <span
+            v-if="isSipCall && callSid"
+            class="text-[11px] leading-relaxed text-n-slate-10 break-all font-mono"
+          >
+            {{ $t('CONVERSATION.VOICE_CALL.CALL_ID', { id: callSid }) }}
           </span>
         </div>
 

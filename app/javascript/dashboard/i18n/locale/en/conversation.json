@@ -85,6 +85,7 @@
       "YOU_ANSWERED": "You answered",
       "ANSWERED_BY": "Answered by {name}",
       "DURATION": "{duration}",
+      "CALL_ID": "{id}",
       "ACCEPT_CALL": "Accept",
       "JOIN_CALL": "Join",
       "TRANSCRIPT": "Transcript",

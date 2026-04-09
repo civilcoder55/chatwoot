@@ -18,8 +18,10 @@ const isVoiceCallMessage = message => {
   return CONTENT_TYPES.VOICE_CALL === message?.content_type;
 };
 
-const isWhatsappCall = message => {
-  return message?.content_attributes?.data?.call_source === 'whatsapp';
+const hasDedicatedCallWidget = message => {
+  return ['whatsapp', 'sip'].includes(
+    message?.content_attributes?.data?.call_source
+  );
 };
 
 const shouldSkipCall = (callDirection, senderId, currentUserId) => {
@@ -40,9 +42,9 @@ function extractCallData(message) {
 export function handleVoiceCallCreated(message, currentUserId) {
   if (!isVoiceCallMessage(message)) return;
 
-  // WhatsApp calls are managed by their own store (whatsappCalls),
-  // don't add them to the Twilio calls store.
-  if (isWhatsappCall(message)) return;
+  // SIP and WhatsApp calls are managed by dedicated stores/widgets,
+  // so they should not be mirrored into the legacy Twilio call store.
+  if (hasDedicatedCallWidget(message)) return;
 
   const { callSid, callDirection, conversationId, senderId } =
     extractCallData(message);
@@ -69,8 +71,8 @@ export function handleVoiceCallUpdated(commit, message, currentUserId) {
   commit(types.UPDATE_CONVERSATION_CALL_STATUS, callInfo);
   commit(types.UPDATE_MESSAGE_CALL_STATUS, callInfo);
 
-  // Twilio-specific store interactions — skip for WhatsApp calls
-  if (isWhatsappCall(message)) return;
+  // Twilio-specific store interactions — skip when another widget owns the call UI.
+  if (hasDedicatedCallWidget(message)) return;
 
   const callsStore = useCallsStore();
 

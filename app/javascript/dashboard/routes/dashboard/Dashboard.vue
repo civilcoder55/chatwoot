@@ -24,12 +24,17 @@ const WhatsappCallWidget = defineAsyncComponent(
   () => import('dashboard/components/widgets/WhatsappCallWidget.vue')
 );
 
+const SipCallWidget = defineAsyncComponent(
+  () => import('dashboard/components/widgets/SipCallWidget.vue')
+);
+
 import CopilotLauncher from 'dashboard/components-next/copilot/CopilotLauncher.vue';
 import CopilotContainer from 'dashboard/components/copilot/CopilotContainer.vue';
 
 import MobileSidebarLauncher from 'dashboard/components-next/sidebar/MobileSidebarLauncher.vue';
 import { useCallsStore } from 'dashboard/stores/calls';
 import { useWhatsappCallsStore } from 'dashboard/stores/whatsappCalls';
+import { useSipCallsStore } from 'dashboard/stores/sipCalls';
 
 export default {
   components: {
@@ -42,6 +47,7 @@ export default {
     CopilotContainer,
     FloatingCallWidget,
     WhatsappCallWidget,
+    SipCallWidget,
     MobileSidebarLauncher,
   },
   setup() {
@@ -51,6 +57,7 @@ export default {
     const { width: windowWidth } = useWindowSize();
     const callsStore = useCallsStore();
     const whatsappCallsStore = useWhatsappCallsStore();
+    const sipCallsStore = useSipCallsStore();
 
     return {
       uiSettings,
@@ -63,6 +70,9 @@ export default {
       hasWhatsappCall: computed(
         () =>
           whatsappCallsStore.hasActiveCall || whatsappCallsStore.hasIncomingCall
+      ),
+      hasSipCall: computed(
+        () => sipCallsStore.hasActiveCall || sipCallsStore.hasIncomingCall
       ),
     };
   },
@@ -175,6 +185,7 @@ export default {
         <CopilotContainer />
         <FloatingCallWidget v-if="hasActiveCall || hasIncomingCall" />
         <WhatsappCallWidget v-if="hasWhatsappCall" />
+        <SipCallWidget v-if="hasSipCall" />
       </template>
       <AddAccountModal
         :show="showCreateAccountModal"

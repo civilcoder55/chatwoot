@@ -1,0 +1,17 @@
+{
+  "SIP_CALL": {
+    "INCOMING_CALL": "Incoming SIP call...",
+    "OUTGOING_CALL": "Outgoing SIP call",
+    "CALLING": "Calling...",
+    "RINGING": "Ringing...",
+    "CALL_FAILED": "Call failed. Please try again.",
+    "ACCEPT": "Accept",
+    "REJECT": "Reject",
+    "HANG_UP": "Hang up",
+    "MUTE": "Mute",
+    "UNMUTE": "Unmute",
+    "MIC_DENIED": "Microphone access denied. Please allow microphone permissions.",
+    "UNKNOWN_CALLER": "Unknown caller",
+    "INITIATE_CALL": "Call"
+  }
+}

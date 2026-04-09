@@ -356,6 +356,29 @@
           "ERROR_MESSAGE": "We were not able to create the voice channel"
         }
       },
+      "SIP": {
+        "TITLE": "قناة SIP",
+        "DESC": "قم بتوصيل منفذ SIP الخاص بك وابدأ في دعم عملائك عبر المكالمات الهاتفية باستخدام البنية التحتية للاتصالات الخاصة بك.",
+        "PHONE_NUMBER": {
+          "LABEL": "رقم الهاتف",
+          "PLACEHOLDER": "أدخل رقم هاتف SIP الخاص بك (مثلاً +1234567890)",
+          "ERROR": "يرجى تقديم رقم هاتف صالح بتنسيق E.164 (مثلاً +1234567890)"
+        },
+        "GATEWAY_URL": {
+          "LABEL": "عنوان URL للبوابة",
+          "PLACEHOLDER": "أدخل عنوان URL لبوابة SIP الخاصة بك (مثلاً https://gateway.example.com)",
+          "ERROR": "يرجى تقديم عنوان URL صالح للبوابة"
+        },
+        "WEBHOOK_SECRET": {
+          "LABEL": "رمز الأمان للـ Webhook",
+          "PLACEHOLDER": "أدخل رمز الأمان للـ Webhook لتأمين الـ callbacks",
+          "ERROR": "مطلوب رمز الأمان للـ Webhook"
+        },
+        "SUBMIT_BUTTON": "إنشاء قناة SIP",
+        "API": {
+          "ERROR_MESSAGE": "لم نتمكن من إنشاء قناة SIP"
+        }
+      },
       "API_CHANNEL": {
         "TITLE": "قناة API",
         "DESC": "اربط مع قناة API وابدأ في دعم عملائك.",
@@ -488,6 +511,10 @@
           "VOICE": {
             "TITLE": "Voice",
             "DESCRIPTION": "Integrate with Twilio Voice"
+          },
+          "SIP": {
+            "TITLE": "SIP",
+            "DESCRIPTION": "ربط خط SIP الخاص بك من خلال بوابتنا"
           }
         }
       },
@@ -1145,7 +1172,8 @@
       "API": "قناة API",
       "INSTAGRAM": "Instagram",
       "TIKTOK": "TikTok",
-      "VOICE": "Voice"
+      "VOICE": "Voice",
+      "SIP": "SIP"
     }
   }
 }
