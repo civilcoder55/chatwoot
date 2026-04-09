@@ -2,20 +2,24 @@
 #
 # Table name: accounts
 #
-#  id                    :integer          not null, primary key
-#  auto_resolve_duration :integer
-#  custom_attributes     :jsonb
-#  domain                :string(100)
-#  feature_flags         :bigint           default(0), not null
-#  internal_attributes   :jsonb            not null
-#  limits                :jsonb
-#  locale                :integer          default("en")
-#  name                  :string           not null
-#  settings              :jsonb
-#  status                :integer          default("active")
-#  support_email         :string(100)
-#  created_at            :datetime         not null
-#  updated_at            :datetime         not null
+#  id                           :integer          not null, primary key
+#  auto_resolve_duration        :integer
+#  custom_attributes            :jsonb
+#  domain                       :string(100)
+#  feature_flags                :bigint           default(0), not null
+#  internal_attributes          :jsonb            not null
+#  limits                       :jsonb
+#  locale                       :integer          default("en")
+#  name                         :string           not null
+#  open_conversations_count     :integer          default(0), not null
+#  pending_conversations_count  :integer          default(0), not null
+#  resolved_conversations_count :integer          default(0), not null
+#  settings                     :jsonb
+#  snoozed_conversations_count  :integer          default(0), not null
+#  status                       :integer          default("active")
+#  support_email                :string(100)
+#  created_at                   :datetime         not null
+#  updated_at                   :datetime         not null
 #
 # Indexes
 #
@@ -128,6 +132,8 @@ class Account < ApplicationRecord
   has_many :notification_settings, dependent: :destroy_async
   has_many :notifications, dependent: :destroy_async
   has_many :portals, dependent: :destroy_async, class_name: '::Portal'
+  has_many :sip_calls, dependent: :destroy_async
+  has_many :sip_channels, dependent: :destroy_async, class_name: '::Channel::Sip'
   has_many :sms_channels, dependent: :destroy_async, class_name: '::Channel::Sms'
   has_many :teams, dependent: :destroy_async
   has_many :telegram_channels, dependent: :destroy_async, class_name: '::Channel::Telegram'

@@ -12,6 +12,7 @@ export const INBOX_TYPES = {
   INSTAGRAM: 'Channel::Instagram',
   TIKTOK: 'Channel::Tiktok',
   VOICE: 'Channel::Voice',
+  SIP: 'Channel::Sip',
 };
 
 export const TWILIO_CHANNEL_MEDIUM = {
@@ -31,6 +32,7 @@ const INBOX_ICON_MAP_FILL = {
   [INBOX_TYPES.INSTAGRAM]: 'i-ri-instagram-fill',
   [INBOX_TYPES.TIKTOK]: 'i-ri-tiktok-fill',
   [INBOX_TYPES.VOICE]: 'i-ri-phone-fill',
+  [INBOX_TYPES.SIP]: 'i-ri-phone-fill',
 };
 
 const DEFAULT_ICON_FILL = 'i-ri-chat-1-fill';
@@ -47,6 +49,7 @@ const INBOX_ICON_MAP_LINE = {
   [INBOX_TYPES.INSTAGRAM]: 'i-woot-instagram',
   [INBOX_TYPES.VOICE]: 'i-woot-voice',
   [INBOX_TYPES.TIKTOK]: 'i-woot-tiktok',
+  [INBOX_TYPES.SIP]: 'i-woot-voice',
 };
 
 const DEFAULT_ICON_LINE = 'i-ri-chat-1-line';
@@ -59,6 +62,7 @@ export const getInboxSource = (type, phoneNumber, inbox) => {
     case INBOX_TYPES.TWILIO:
     case INBOX_TYPES.WHATSAPP:
     case INBOX_TYPES.VOICE:
+    case INBOX_TYPES.SIP:
       return phoneNumber || '';
 
     case INBOX_TYPES.EMAIL:
@@ -99,6 +103,9 @@ export const getReadableInboxByType = (type, phoneNumber) => {
 
     case INBOX_TYPES.VOICE:
       return 'voice';
+
+    case INBOX_TYPES.SIP:
+      return 'sip';
 
     default:
       return 'chat';
@@ -143,6 +150,9 @@ export const getInboxClassByType = (type, phoneNumber) => {
       return 'brand-tiktok';
 
     case INBOX_TYPES.VOICE:
+      return 'phone';
+
+    case INBOX_TYPES.SIP:
       return 'phone';
 
     default:

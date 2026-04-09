@@ -11,6 +11,8 @@
 #  imap_login                :string           default("")
 #  imap_password             :string           default("")
 #  imap_port                 :integer          default(0)
+#  imap_retry_after          :datetime
+#  imap_retry_count          :integer          default(0), not null
 #  provider                  :string
 #  provider_config           :jsonb
 #  smtp_address              :string           default("")

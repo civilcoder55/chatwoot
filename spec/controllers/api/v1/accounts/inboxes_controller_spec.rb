@@ -434,6 +434,35 @@ RSpec.describe 'Inboxes API', type: :request do
         expect(response.body).to include('+123456789')
       end
 
+      it 'creates a sip inbox when administrator' do
+        allow(Sip::GatewayClient).to receive(:new).with(anything).and_return( instance_double(Sip::GatewayClient, validate_tenant: true) )
+        post "/api/v1/accounts/#{account.id}/inboxes",
+             headers: admin.create_new_auth_token,
+             params: { name: 'SIP Inbox',
+                       channel: { type: 'sip', phone_number: '+15551234567',
+                                  provider_config: { api_key: 'secret' } } },
+             as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include('SIP Inbox')
+
+        inbox = account.inboxes.find_by(name: 'SIP Inbox')
+        expect(inbox).to be_present
+        expect(inbox.channel).to be_a(Channel::Sip)
+        expect(inbox.channel.phone_number).to eq('+15551234567')
+      end
+
+      it 'returns error when sip inbox phone_number is invalid' do
+        post "/api/v1/accounts/#{account.id}/inboxes",
+             headers: admin.create_new_auth_token,
+             params: { name: 'Bad SIP',
+                       channel: { type: 'sip', phone_number: 'not-a-phone',
+                                  provider_config: {} } },
+             as: :json
+
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+
       it 'creates the webwidget inbox that allow messages after conversation is resolved' do
         post "/api/v1/accounts/#{account.id}/inboxes",
              headers: admin.create_new_auth_token,

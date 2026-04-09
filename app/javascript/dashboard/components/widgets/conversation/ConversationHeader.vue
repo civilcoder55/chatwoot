@@ -14,12 +14,17 @@ import { snoozedReopenTime } from 'dashboard/helper/snoozeHelpers';
 import { useInbox } from 'dashboard/composables/useInbox';
 import { useI18n } from 'vue-i18n';
 import WhatsappCallsAPI from 'dashboard/api/whatsappCalls';
+import SipCallsAPI from 'dashboard/api/sipCalls';
 import { emitter } from 'shared/helpers/mitt';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
 import {
   useWhatsappCallsStore,
   setOutboundCallProperty,
 } from 'dashboard/stores/whatsappCalls';
+import {
+  useSipCallsStore,
+  setSipOutboundCallProperty,
+} from 'dashboard/stores/sipCalls';
 import { startCallRecording } from 'dashboard/composables/useWhatsappCallSession';
 
 const props = defineProps({
@@ -40,6 +45,7 @@ const conversationHeader = ref(null);
 const { width } = useElementSize(conversationHeader);
 const { isAWebWidgetInbox, isAWhatsAppCloudChannel } = useInbox();
 const whatsappCallsStore = useWhatsappCallsStore();
+const sipCallsStore = useSipCallsStore();
 const isInitiatingCall = ref(false);
 
 const currentChat = computed(() => store.getters.getSelectedChat);
@@ -100,6 +106,12 @@ const hasMultipleInboxes = computed(
 );
 
 const hasSlaPolicyId = computed(() => props.chat?.sla_policy_id);
+
+const canInitiateSipCall = computed(() => {
+  if (inbox.value?.channel_type !== 'Channel::Sip') return false;
+  if (sipCallsStore.hasSipCall) return false;
+  return true;
+});
 
 const canInitiateWhatsappCall = computed(() => {
   if (!isAWhatsAppCloudChannel.value) return false;
@@ -222,6 +234,82 @@ const initiateWhatsappCall = async () => {
     isInitiatingCall.value = false;
   }
 };
+
+const initiateSipCall = async () => {
+  if (isInitiatingCall.value || !currentChat.value?.id) return;
+  isInitiatingCall.value = true;
+  let pc = null;
+  let localStream = null;
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    pc = new RTCPeerConnection({
+      // iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+    });
+    localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+
+    pc.ontrack = event => {
+      const [stream] = event.streams;
+      if (!stream) return;
+      const audio = document.createElement('audio');
+      audio.srcObject = stream;
+      audio.autoplay = true;
+      document.body.appendChild(audio);
+      setSipOutboundCallProperty('audio', audio);
+      sipCallsStore.markActiveCallConnected();
+    };
+
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    await waitForOutboundIceGathering(pc);
+    const completeSdp = pc.localDescription.sdp;
+
+    const response = await SipCallsAPI.initiate(
+      currentChat.value.id,
+      completeSdp
+    );
+    const remoteSdpAnswer = response.data?.sdp_answer;
+
+    if (remoteSdpAnswer) {
+      await pc.setRemoteDescription({
+        type: 'answer',
+        sdp: remoteSdpAnswer,
+      });
+    }
+
+    emitter.emit(BUS_EVENTS.SHOW_ALERT, {
+      message: t('SIP_CALL.CALLING'),
+      type: 'success',
+    });
+
+    const outboundCallId = response.data?.call_id;
+    setSipOutboundCallProperty('pc', pc);
+    setSipOutboundCallProperty('stream', localStream);
+    setSipOutboundCallProperty('callId', outboundCallId);
+
+    sipCallsStore.setActiveCall({
+      id: response.data?.id,
+      callId: outboundCallId,
+      direction: 'outbound',
+      status: 'ringing',
+      conversationId: currentChat.value.id,
+      caller: {
+        name: currentContact.value?.name,
+        phone: currentContact.value?.phone_number,
+        avatar: currentContact.value?.thumbnail,
+      },
+    });
+  } catch (err) {
+    if (pc) pc.close();
+    if (localStream) localStream.getTracks().forEach(track => track.stop());
+    const errorMessage = err.response?.data?.error || t('SIP_CALL.CALL_FAILED');
+    emitter.emit(BUS_EVENTS.SHOW_ALERT, {
+      message: errorMessage,
+      type: 'error',
+    });
+  } finally {
+    isInitiatingCall.value = false;
+  }
+};
 </script>
 
 <template>
@@ -289,6 +377,19 @@ const initiateWhatsappCall = async () => {
         class="flex items-center justify-center w-8 h-8 rounded-lg text-n-slate-11 hover:text-n-slate-12 hover:bg-n-slate-3 transition-colors"
         :disabled="isInitiatingCall"
         @click="initiateWhatsappCall"
+      >
+        <i
+          v-if="isInitiatingCall"
+          class="text-base i-ph-circle-notch animate-spin"
+        />
+        <i v-else class="text-base i-ph-phone-bold" />
+      </button>
+      <button
+        v-if="canInitiateSipCall"
+        v-tooltip="$t('SIP_CALL.INITIATE_CALL')"
+        class="flex items-center justify-center w-8 h-8 rounded-lg text-n-slate-11 hover:text-n-slate-12 hover:bg-n-slate-3 transition-colors"
+        :disabled="isInitiatingCall"
+        @click="initiateSipCall"
       >
         <i
           v-if="isInitiatingCall"

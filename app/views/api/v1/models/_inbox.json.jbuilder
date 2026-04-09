@@ -137,3 +137,8 @@ if resource.channel_type == 'Channel::Voice'
   json.voice_call_webhook_url resource.channel.try(:voice_call_webhook_url)
   json.voice_status_webhook_url resource.channel.try(:voice_status_webhook_url)
 end
+
+## SIP Channel Attributes
+if resource.sip?
+  json.sip_phone_number resource.channel.try(:phone_number)
+end

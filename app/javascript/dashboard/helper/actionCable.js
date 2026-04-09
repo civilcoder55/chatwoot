@@ -1,4 +1,5 @@
 import AuthAPI from '../api/auth';
+import types from '../store/mutation-types';
 import BaseActionCableConnector from '../../shared/helpers/BaseActionCableConnector';
 import DashboardAudioNotificationHelper from './AudioAlerts/DashboardAudioNotificationHelper';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
@@ -8,8 +9,21 @@ import {
   useWhatsappCallsStore,
   getOutboundCallState,
 } from 'dashboard/stores/whatsappCalls';
+import {
+  useSipCallsStore,
+  getSipOutboundCallState,
+} from 'dashboard/stores/sipCalls';
 
 const { isImpersonating } = useImpersonation();
+
+const SIP_TO_VOICE_STATUS = {
+  ringing: 'ringing',
+  accepted: 'in-progress',
+  rejected: 'failed',
+  missed: 'no-answer',
+  ended: 'completed',
+  failed: 'failed',
+};
 
 class ActionCableConnector extends BaseActionCableConnector {
   constructor(app, pubsubToken) {
@@ -43,6 +57,12 @@ class ActionCableConnector extends BaseActionCableConnector {
       'whatsapp_call.ended': this.onWhatsappCallEnded,
       'whatsapp_call.outbound_connected': this.onWhatsappCallOutboundConnected,
       'whatsapp_call.permission_granted': this.onWhatsappCallPermissionGranted,
+      'sip_call.incoming': this.onSipCallIncoming,
+      'sip_call.ringing': this.onSipCallRinging,
+      'sip_call.accepted': this.onSipCallAccepted,
+      'sip_call.ended': this.onSipCallEnded,
+      'sip_call.sdp_answer': this.onSipCallSdpAnswer,
+      'sip_call.answered': this.onSipCallAnswered,
     };
   }
 
@@ -261,6 +281,92 @@ class ActionCableConnector extends BaseActionCableConnector {
     emitter.emit(BUS_EVENTS.SHOW_ALERT, {
       message: `${data.contact_name} approved the call permission request. You can now call them.`,
       type: 'success',
+    });
+  };
+
+  // ── SIP Call handlers ──
+  // eslint-disable-next-line class-methods-use-this
+  onSipCallIncoming = data => {
+    const sipCallsStore = useSipCallsStore();
+    sipCallsStore.addIncomingCall({
+      id: data.id,
+      callId: data.call_id,
+      sipCallId: data.id,
+      direction: data.direction,
+      inboxId: data.inbox_id,
+      conversationId: data.conversation_id,
+      caller: data.caller,
+      sdpOffer: data.sdp_offer,
+      iceServers: data.ice_servers,
+    });
+  };
+
+  // eslint-disable-next-line class-methods-use-this
+  onSipCallRinging = data => {
+    const sipCallsStore = useSipCallsStore();
+    sipCallsStore.markOutboundRinging(data.call_id);
+    this.updateSipConversationState(data, 'ringing');
+  };
+
+  onSipCallAccepted = data => {
+    const sipCallsStore = useSipCallsStore();
+    const currentUserId = this.app.$store.getters.getCurrentUserID;
+    if (data.accepted_by_agent_id !== currentUserId) {
+      sipCallsStore.handleCallAcceptedByOther(data.call_id);
+    }
+  };
+
+  // eslint-disable-next-line class-methods-use-this
+  onSipCallEnded = data => {
+    const sipCallsStore = useSipCallsStore();
+    sipCallsStore.handleCallEnded(data.call_id);
+    this.updateSipConversationState(data, data.status);
+  };
+
+  // eslint-disable-next-line class-methods-use-this
+  onSipCallSdpAnswer = data => {
+    const { pc, callId } = getSipOutboundCallState();
+    const hasRemoteDescription =
+      pc?.currentRemoteDescription || pc?.pendingRemoteDescription;
+
+    if (
+      pc &&
+      callId === data.call_id &&
+      data.sdp_answer &&
+      !hasRemoteDescription &&
+      pc.signalingState === 'have-local-offer'
+    ) {
+      pc.setRemoteDescription({ type: 'answer', sdp: data.sdp_answer }).catch(
+        err => {
+          // eslint-disable-next-line no-console
+          console.error('[SIP Call] Failed to set remote SDP answer:', err);
+        }
+      );
+    }
+  };
+
+  // eslint-disable-next-line class-methods-use-this
+  onSipCallAnswered = data => {
+    const sipCallsStore = useSipCallsStore();
+    const { callId } = getSipOutboundCallState();
+    if (callId === data.call_id) {
+      sipCallsStore.markActiveCallConnected();
+    }
+    this.updateSipConversationState(data, 'accepted');
+  };
+
+  updateSipConversationState = (data, sipStatus) => {
+    const conversationId = data.conversation_id;
+    const callStatus = SIP_TO_VOICE_STATUS[sipStatus] || 'failed';
+    if (!conversationId) return;
+
+    this.app.$store.commit(types.UPDATE_CONVERSATION_CALL_STATUS, {
+      conversationId,
+      callStatus,
+    });
+    this.app.$store.commit(types.UPDATE_MESSAGE_CALL_STATUS, {
+      conversationId,
+      callStatus,
     });
   };
 }

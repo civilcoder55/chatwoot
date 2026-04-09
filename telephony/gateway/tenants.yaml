@@ -1,0 +1,10 @@
+# Tenant configuration for the SIP gateway.
+# Each entry maps a phone number to an API key.
+# When a call arrives for a phone number listed here,
+# the gateway uses the corresponding key for webhook delivery
+# and API authentication.
+tenants:
+  - phone_number: "+1234567890"
+    key: "tenant-key-1"
+  - phone_number: "+966555555555"
+    key: "tenant-key-2"

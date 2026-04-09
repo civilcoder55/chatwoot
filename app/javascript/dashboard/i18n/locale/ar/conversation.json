@@ -74,15 +74,21 @@
       "HIDE_LABELS": "إخفاء السمات"
     },
     "VOICE_CALL": {
-      "INCOMING_CALL": "Incoming call",
-      "OUTGOING_CALL": "Outgoing call",
-      "CALL_IN_PROGRESS": "Call in progress",
-      "NO_ANSWER": "No answer",
-      "MISSED_CALL": "Missed call",
-      "CALL_ENDED": "Call ended",
-      "NOT_ANSWERED_YET": "Not answered yet",
-      "THEY_ANSWERED": "They answered",
-      "YOU_ANSWERED": "You answered"
+      "INCOMING_CALL": "مكالمة واردة",
+      "OUTGOING_CALL": "مكالمة صادرة",
+      "CALL_IN_PROGRESS": "مكالمة قيد التنفيذ",
+      "NO_ANSWER": "لا يوجد إجابة",
+      "MISSED_CALL": "مكالمة فائتة",
+      "CALL_ENDED": "انتهت المكالمة",
+      "NOT_ANSWERED_YET": "لم يتم الرد بعد",
+      "THEY_ANSWERED": "تم الرد",
+      "YOU_ANSWERED": "لقد رددت",
+      "CALL_ID": "{id}",
+      "DURATION": "{duration}",
+      "ACCEPT_CALL": "قبول",
+      "JOIN_CALL": "انضم",
+      "TRANSCRIPT": "النص",
+      "AUDIO_NOT_SUPPORTED": "متصفحك لا يدعم تشغيل الصوت."
     },
     "HEADER": {
       "RESOLVE_ACTION": "حل المحادثة",

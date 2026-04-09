@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_03_24_102005) do
+ActiveRecord::Schema[7.1].define(version: 2026_04_06_120001) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -484,6 +484,16 @@ ActiveRecord::Schema[7.1].define(version: 2026_03_24_102005) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["line_channel_id"], name: "index_channel_line_on_line_channel_id", unique: true
+  end
+
+  create_table "channel_sip", force: :cascade do |t|
+    t.string "phone_number", null: false
+    t.jsonb "provider_config", default: {}, null: false
+    t.integer "account_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_channel_sip_on_account_id"
+    t.index ["phone_number"], name: "index_channel_sip_on_phone_number", unique: true
   end
 
   create_table "channel_sms", force: :cascade do |t|
@@ -1146,6 +1156,26 @@ ActiveRecord::Schema[7.1].define(version: 2026_03_24_102005) do
     t.index ["account_id", "date", "dimension_type", "dimension_id", "metric"], name: "index_rollup_unique_key", unique: true
     t.index ["account_id", "dimension_type", "date"], name: "index_rollup_summary"
     t.index ["account_id", "metric", "date"], name: "index_rollup_timeseries"
+  end
+
+  create_table "sip_calls", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "inbox_id", null: false
+    t.bigint "conversation_id", null: false
+    t.bigint "accepted_by_agent_id"
+    t.bigint "message_id"
+    t.string "call_id", null: false
+    t.string "direction", null: false
+    t.string "status", default: "ringing", null: false
+    t.integer "duration_seconds"
+    t.string "end_reason"
+    t.jsonb "meta", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "conversation_id"], name: "index_sip_calls_on_account_id_and_conversation_id"
+    t.index ["call_id"], name: "index_sip_calls_on_call_id", unique: true
+    t.index ["inbox_id", "status"], name: "index_sip_calls_on_inbox_id_and_status"
+    t.index ["message_id"], name: "index_sip_calls_on_message_id"
   end
 
   create_table "sla_events", force: :cascade do |t|

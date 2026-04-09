@@ -114,6 +114,11 @@ export const FORMATTING = {
     nodes: [],
     menu: [],
   },
+  'Channel::Sip': {
+    marks: [],
+    nodes: [],
+    menu: [],
+  },
   'Channel::Tiktok': {
     marks: [],
     nodes: [],

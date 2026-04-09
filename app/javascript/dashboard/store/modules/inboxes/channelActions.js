@@ -49,4 +49,20 @@ export const channelActions = {
       throw error;
     }
   },
+  createSipChannel: async ({ commit }, params) => {
+    try {
+      commit(types.default.SET_INBOXES_UI_FLAG, { isCreating: true });
+      const response = await InboxesAPI.create({
+        name: params.name,
+        channel: { ...params.sip, type: 'sip' },
+      });
+      commit(types.default.ADD_INBOXES, response.data);
+      commit(types.default.SET_INBOXES_UI_FLAG, { isCreating: false });
+      // sendAnalyticsEvent('sip');
+      return response.data;
+    } catch (error) {
+      commit(types.default.SET_INBOXES_UI_FLAG, { isCreating: false });
+      throw error;
+    }
+  },
 };

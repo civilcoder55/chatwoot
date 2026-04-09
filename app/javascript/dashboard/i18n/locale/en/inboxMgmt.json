@@ -364,6 +364,24 @@
           "ERROR_MESSAGE": "We were not able to create the voice channel"
         }
       },
+      "SIP": {
+        "TITLE": "SIP Channel",
+        "DESC": "Connect your SIP trunk and start supporting customers via phone calls using your own telephony infrastructure.",
+        "PHONE_NUMBER": {
+          "LABEL": "Phone Number",
+          "PLACEHOLDER": "Enter your SIP phone number (e.g. +1234567890)",
+          "ERROR": "Please provide a valid phone number in E.164 format (e.g. +1234567890)"
+        },
+        "API_KEY": {
+          "LABEL": "API Key",
+          "PLACEHOLDER": "Enter your gateway tenant API key",
+          "ERROR": "API key is required"
+        },
+        "SUBMIT_BUTTON": "Create SIP Channel",
+        "API": {
+          "ERROR_MESSAGE": "We were not able to create the SIP channel"
+        }
+      },
       "API_CHANNEL": {
         "TITLE": "API Channel",
         "DESC": "Integrate with API channel and start supporting your customers.",
@@ -496,6 +514,10 @@
           "VOICE": {
             "TITLE": "Voice",
             "DESCRIPTION": "Integrate with Twilio Voice"
+          },
+          "SIP": {
+            "TITLE": "SIP",
+            "DESCRIPTION": "Connect your own SIP trunk through our gateway"
           }
         }
       },
@@ -1156,7 +1178,8 @@
       "API": "API Channel",
       "INSTAGRAM": "Instagram",
       "TIKTOK": "TikTok",
-      "VOICE": "Voice"
+      "VOICE": "Voice",
+      "SIP": "SIP"
     }
   }
 }
