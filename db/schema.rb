@@ -73,6 +73,10 @@ ActiveRecord::Schema[7.1].define(version: 2026_03_24_102005) do
     t.integer "status", default: 0
     t.jsonb "internal_attributes", default: {}, null: false
     t.jsonb "settings", default: {}
+    t.integer "open_conversations_count", default: 0, null: false
+    t.integer "resolved_conversations_count", default: 0, null: false
+    t.integer "pending_conversations_count", default: 0, null: false
+    t.integer "snoozed_conversations_count", default: 0, null: false
     t.index ["status"], name: "index_accounts_on_status"
   end
 
@@ -200,8 +204,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_03_24_102005) do
     t.text "description"
     t.integer "assignment_order", default: 0, null: false
     t.integer "conversation_priority", default: 0, null: false
-    t.integer "fair_distribution_limit", default: 100, null: false
-    t.integer "fair_distribution_window", default: 3600, null: false
+    t.integer "fair_distribution_limit", default: 1, null: false
+    t.integer "fair_distribution_window", default: 60, null: false
     t.boolean "enabled", default: true, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -444,6 +448,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_03_24_102005) do
     t.jsonb "provider_config", default: {}
     t.string "provider"
     t.boolean "verified_for_sending", default: false, null: false
+    t.integer "imap_retry_count", default: 0, null: false
+    t.datetime "imap_retry_after"
     t.index ["email"], name: "index_channel_email_on_email", unique: true
     t.index ["forward_to_email"], name: "index_channel_email_on_forward_to_email", unique: true
   end
@@ -1272,6 +1278,27 @@ ActiveRecord::Schema[7.1].define(version: 2026_03_24_102005) do
     t.index ["account_id", "url"], name: "index_webhooks_on_account_id_and_url", unique: true
   end
 
+  create_table "whatsapp_calls", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "inbox_id", null: false
+    t.bigint "conversation_id", null: false
+    t.bigint "accepted_by_agent_id"
+    t.string "call_id", null: false
+    t.string "direction", null: false
+    t.string "status", default: "ringing", null: false
+    t.integer "duration_seconds"
+    t.string "end_reason"
+    t.jsonb "meta", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "message_id"
+    t.text "transcript"
+    t.index ["account_id", "conversation_id"], name: "index_whatsapp_calls_on_account_id_and_conversation_id"
+    t.index ["call_id"], name: "index_whatsapp_calls_on_call_id", unique: true
+    t.index ["inbox_id", "status"], name: "index_whatsapp_calls_on_inbox_id_and_status"
+    t.index ["message_id"], name: "index_whatsapp_calls_on_message_id"
+  end
+
   create_table "working_hours", force: :cascade do |t|
     t.bigint "inbox_id"
     t.bigint "account_id"
@@ -1291,6 +1318,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_03_24_102005) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "inboxes", "portals"
+  add_foreign_key "whatsapp_calls", "messages"
   create_trigger("accounts_after_insert_row_tr", :generated => true, :compatibility => 1).
       on("accounts").
       after(:insert).

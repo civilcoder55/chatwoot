@@ -106,6 +106,8 @@
   premium: true
 - name: custom_tools
   display_name: Custom Tools
+- name: whatsapp_call
+  display_name: WhatsApp Calling
   enabled: false
   premium: true
 - name: message_reply_to
