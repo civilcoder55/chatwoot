@@ -397,6 +397,7 @@ Alternatively, we could split the Gateway into separate components: (like what L
 - Support Opus codec for better quality and lower bandwidth.
 - Support Trickle ICE to reduce call setup time.
 - Add more secure way to authenticate the Gateway with Chatwoot. Hmac for webhook and better API auth.
+- Add a state machine for the call and enhance the call disposition logic.
 --- 
 
 ## Screenshots
