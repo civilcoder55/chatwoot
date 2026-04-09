@@ -9,16 +9,16 @@ import (
 func TestHangupReason(t *testing.T) {
 	tests := []struct {
 		name      string
-		initiator string
+		initiator Initiator
 		connected bool
 		expected  string
 	}{
-		{"agent cancels before answer", "agent", false, "agent-canceled"},
-		{"agent ends connected call", "agent", true, "agent-hangup"},
-		{"remote cancels before answer", "remote", false, "remote-canceled"},
-		{"remote ends connected call", "remote", true, "remote-hangup"},
-		{"unknown initiator connected", "unknown", true, "failed"},
-		{"unknown initiator not connected", "unknown", false, "failed"},
+		{"agent cancels before answer", InitiatorAgent, false, "agent-canceled"},
+		{"agent ends connected call", InitiatorAgent, true, "agent-hangup"},
+		{"remote cancels before answer", InitiatorRemote, false, "remote-canceled"},
+		{"remote ends connected call", InitiatorRemote, true, "remote-hangup"},
+		{"unknown initiator connected", Initiator("unknown"), true, "failed"},
+		{"unknown initiator not connected", Initiator("unknown"), false, "failed"},
 	}
 
 	for _, tt := range tests {

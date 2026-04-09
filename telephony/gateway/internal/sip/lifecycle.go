@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"gateway/internal/call"
+	"gateway/internal/webhook"
 
 	"github.com/emiago/sipgo/sip"
 	"github.com/rs/zerolog/log"
@@ -29,7 +30,7 @@ func (s *Server) handleBye(req *sip.Request, tx sip.ServerTransaction) {
 	if err := s.dialogSrv.ReadBye(req, tx); err == nil {
 		if session != nil {
 			log.Info().Str("call_id", session.CallID).Msg("inbound BYE received, ending call")
-			s.terminateSession(session, hangupReason("remote", true))
+			s.terminateSession(session, hangupReason(InitiatorRemote, true))
 		}
 		return
 	}
@@ -37,7 +38,7 @@ func (s *Server) handleBye(req *sip.Request, tx sip.ServerTransaction) {
 	if err := s.dialogCli.ReadBye(req, tx); err == nil {
 		if session != nil {
 			log.Info().Str("call_id", session.CallID).Msg("outbound BYE received, ending call")
-			s.terminateSession(session, hangupReason("remote", true))
+			s.terminateSession(session, hangupReason(InitiatorRemote, true))
 		}
 		return
 	}
@@ -46,38 +47,6 @@ func (s *Server) handleBye(req *sip.Request, tx sip.ServerTransaction) {
 	if err := tx.Respond(sip.NewResponseFromRequest(req, sipStatusCallDoesNotExist, "Call/Transaction Does Not Exist", nil)); err != nil {
 		log.Error().Err(err).Msg("failed to send 481 for unknown BYE")
 	}
-}
-
-// handleCancel processes an incoming SIP CANCEL request.
-func (s *Server) handleCancel(req *sip.Request, tx sip.ServerTransaction) {
-	if err := tx.Respond(sip.NewResponseFromRequest(req, sip.StatusOK, "OK", nil)); err != nil {
-		log.Error().Err(err).Msg("failed to send 200 OK for CANCEL")
-	}
-
-	session := s.findSessionBySIPCallID(req)
-	if session == nil {
-		log.Warn().Str("sip_call_id", callIDValue(req)).Msg("CANCEL received for unknown session")
-		return
-	}
-
-	if session.GetStatus() != call.StatusRinging {
-		log.Info().Str("call_id", session.CallID).Msg("ignoring late CANCEL after final response")
-		return
-	}
-
-	if session.InboundDlg != nil {
-		go func() {
-			if err := session.InboundDlg.Respond(sipStatusRequestTerminated, "Request Terminated", nil); err != nil {
-				if session.IsTerminal() {
-					return
-				}
-				log.Debug().Err(err).Str("call_id", session.CallID).Msg("failed to send 487 after CANCEL")
-			}
-		}()
-	}
-
-	log.Info().Str("call_id", session.CallID).Msg("CANCEL received — caller hangup while ringing")
-	s.terminateSession(session, hangupReason("remote", false))
 }
 
 // SendBye terminates a call by sending a SIP BYE or rejecting a ringing call.
@@ -99,7 +68,7 @@ func (s *Server) SendBye(session *call.Session) {
 		if session.Cancel != nil {
 			session.Cancel()
 		}
-		s.terminateSession(session, hangupReason("agent", false))
+		s.terminateSession(session, hangupReason(InitiatorAgent, false))
 		return
 	}
 
@@ -122,7 +91,7 @@ func (s *Server) SendBye(session *call.Session) {
 		}
 	}
 
-	s.terminateSession(session, hangupReason("agent", true))
+	s.terminateSession(session, hangupReason(InitiatorAgent, true))
 }
 
 func (s *Server) terminateSession(session *call.Session, reason string) {
@@ -166,7 +135,7 @@ func (s *Server) terminateSessionWithData(session *call.Session, reason string, 
 		data[key] = value
 	}
 
-	if err := s.webhook.Send("call.ended", data); err != nil {
+	if err := s.webhook.Send(webhook.EventEnded, data); err != nil {
 		log.Error().Err(err).Str("call_id", session.CallID).Msg("failed to send call.ended webhook")
 	}
 
@@ -189,14 +158,5 @@ func (s *Server) findSessionBySIPCallID(req *sip.Request) *call.Session {
 	if sipCallID == "" {
 		return nil
 	}
-
-	var found *call.Session
-	s.registry.Range(func(session *call.Session) bool {
-		if session.SIPCallID == sipCallID {
-			found = session
-			return false
-		}
-		return true
-	})
-	return found
+	return s.registry.GetBySIPCallID(sipCallID)
 }

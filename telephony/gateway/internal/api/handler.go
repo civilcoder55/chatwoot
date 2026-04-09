@@ -53,7 +53,7 @@ func NewHandler(cfg *config.Config, registry *call.Registry, sip *sipserver.Serv
 	h.mux.HandleFunc("POST /validate", h.authenticate(h.validate))
 	h.mux.HandleFunc("GET /health", h.health)
 
-	return h.mux
+	return requestLogger(h.mux)
 }
 
 type tenantHandlerFunc func(http.ResponseWriter, *http.Request, *tenant.Tenant)
@@ -70,7 +70,7 @@ func (h *Handler) authenticate(next tenantHandlerFunc) http.HandlerFunc {
 	}
 }
 
-// Health that return data and publicly accessed. HHH smell.
+// health returns service status and active call count.
 func (h *Handler) health(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{
 		"status":       "ok",
@@ -84,6 +84,7 @@ func (h *Handler) validate(w http.ResponseWriter, _ *http.Request, _ *tenant.Ten
 }
 
 func (h *Handler) initiateCall(w http.ResponseWriter, r *http.Request, t *tenant.Tenant) {
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20) // 1MB limit
 	var req InitiateCallRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
@@ -112,7 +113,7 @@ func (h *Handler) initiateCall(w http.ResponseWriter, r *http.Request, t *tenant
 		return
 	}
 
-	bridge.StartMediaBridge(session.Ctx, session, nil)
+	bridge.StartMediaBridge(session.Ctx, session)
 	writeJSON(w, http.StatusOK, map[string]string{"call_id": callID, "sdp_answer": sdpAnswer})
 
 	go h.cs.HandleOutboundAsync(session, req.From, sdpAnswer)
@@ -120,18 +121,12 @@ func (h *Handler) initiateCall(w http.ResponseWriter, r *http.Request, t *tenant
 
 // Accept incoming call
 func (h *Handler) acceptCall(w http.ResponseWriter, r *http.Request, t *tenant.Tenant) {
-	callID := r.PathValue("callID")
-	session := h.registry.Get(callID)
+	session := h.resolveSession(w, r, t)
 	if session == nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "call not found"})
 		return
 	}
 
-	if !h.ownsSession(t, session) {
-		writeJSON(w, http.StatusForbidden, map[string]string{"error": "forbidden"})
-		return
-	}
-
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20) // 1MB limit
 	var req AcceptCallRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.SDPAnswer == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "sdp_answer is required"})
@@ -139,31 +134,24 @@ func (h *Handler) acceptCall(w http.ResponseWriter, r *http.Request, t *tenant.T
 	}
 
 	if err := h.sip.AcceptInbound(session, req.SDPAnswer); err != nil {
-		log.Error().Err(err).Str("call_id", callID).Msg("failed to accept inbound call")
+		log.Error().Err(err).Str("call_id", session.CallID).Msg("failed to accept inbound call")
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		return
 	}
 
-	bridge.StartMediaBridge(session.Ctx, session, session.Recorder)
+	bridge.StartMediaBridge(session.Ctx, session)
 	writeJSON(w, http.StatusOK, map[string]string{"ok": "true"})
 }
 
 // Reject incoming call
 func (h *Handler) rejectCall(w http.ResponseWriter, r *http.Request, t *tenant.Tenant) {
-	callID := r.PathValue("callID")
-	session := h.registry.Get(callID)
+	session := h.resolveSession(w, r, t)
 	if session == nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "call not found"})
-		return
-	}
-
-	if !h.ownsSession(t, session) {
-		writeJSON(w, http.StatusForbidden, map[string]string{"error": "forbidden"})
 		return
 	}
 
 	if err := h.sip.RejectInbound(session); err != nil {
-		log.Error().Err(err).Str("call_id", callID).Msg("failed to reject call")
+		log.Error().Err(err).Str("call_id", session.CallID).Msg("failed to reject call")
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		return
 	}
@@ -173,15 +161,8 @@ func (h *Handler) rejectCall(w http.ResponseWriter, r *http.Request, t *tenant.T
 
 // Terminate call (send BYE) for answered incoming or outbound calls
 func (h *Handler) terminateCall(w http.ResponseWriter, r *http.Request, t *tenant.Tenant) {
-	callID := r.PathValue("callID")
-	session := h.registry.Get(callID)
+	session := h.resolveSession(w, r, t)
 	if session == nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "call not found"})
-		return
-	}
-
-	if !h.ownsSession(t, session) {
-		writeJSON(w, http.StatusForbidden, map[string]string{"error": "forbidden"})
 		return
 	}
 
@@ -189,12 +170,20 @@ func (h *Handler) terminateCall(w http.ResponseWriter, r *http.Request, t *tenan
 	writeJSON(w, http.StatusOK, map[string]string{"ok": "true"})
 }
 
-// ownsSession checks that the authenticated tenant owns the call session.
-func (h *Handler) ownsSession(t *tenant.Tenant, session *call.Session) bool {
-	if session.IsInbound() {
-		return session.To == t.PhoneNumber
+// resolveSession looks up the session and verifies tenant ownership.
+// Returns nil (and writes an HTTP error) if the session is not found or not owned.
+func (h *Handler) resolveSession(w http.ResponseWriter, r *http.Request, t *tenant.Tenant) *call.Session {
+	callID := r.PathValue("callID")
+	session := h.registry.Get(callID)
+	if session == nil {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "call not found"})
+		return nil
 	}
-	return session.From == t.PhoneNumber
+	if session.LocalPhoneNumber() != t.PhoneNumber {
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "forbidden"})
+		return nil
+	}
+	return session
 }
 
 func writeJSON(w http.ResponseWriter, status int, data any) {

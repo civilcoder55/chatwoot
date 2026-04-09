@@ -37,7 +37,7 @@ All settings are configured via environment variables:
 |---|---|---|
 | `GATEWAY_SIP_PORT` | `5080` | UDP port for SIP signaling |
 | `GATEWAY_HTTP_PORT` | `8080` | HTTP API port |
-| `GATEWAY_PUBLIC_IP` | `192.168.1.6` | Public IP for SIP and HTTP server |
+| `GATEWAY_BIND_ADDR` | `192.168.1.6` | Public IP for SIP and HTTP server |
 | `GATEWAY_STUN_SERVER` | `stun:stun.l.google.com:19302` | STUN server for ICE |
 | `GATEWAY_RECORDING_DIR` | `/recordings` | Directory for call recordings |
 | `GATEWAY_ICE_TCP_PORT` | `9565` | TCP port for ICE/WebRTC (TCP for more reliable connections fits more for local testing, but of course on production we'd use UDP for better performance) |

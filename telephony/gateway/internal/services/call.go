@@ -3,11 +3,12 @@ package services
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"gateway/internal/call"
 	"gateway/internal/config"
 	sipserver "gateway/internal/sip"
 	"gateway/internal/webhook"
-	"time"
 
 	gw "gateway/internal/webrtc"
 
@@ -56,7 +57,7 @@ func (cs *CallService) PrepareOutboundSession(callID, to, from, browserOffer str
 }
 
 func (cs *CallService) HandleOutboundAsync(session *call.Session, from, sdpAnswer string) {
-	if err := cs.webhook.Send("call.sdp_answer", map[string]any{
+	if err := cs.webhook.Send(webhook.EventSDPAnswer, map[string]any{
 		"call_id":      session.CallID,
 		"sdp_answer":   sdpAnswer,
 		"phone_number": from,
@@ -66,16 +67,8 @@ func (cs *CallService) HandleOutboundAsync(session *call.Session, from, sdpAnswe
 
 	if err := cs.sip.SendInvite(session.Ctx, session); err != nil {
 		log.Error().Err(err).Str("call_id", session.CallID).Msg("failed to send SIP INVITE")
-		cs.webhook.Send("call.ended", map[string]any{"call_id": session.CallID, "reason": "sip-invite-failed", "phone_number": from})
-
-		if session.Cancel != nil {
-			session.Cancel()
-		}
-
-		if session.PC != nil {
-			session.PC.Close()
-		}
-
+		cs.webhook.Send(webhook.EventEnded, map[string]any{"call_id": session.CallID, "reason": "sip-invite-failed", "phone_number": from})
+		session.Close()
 		cs.registry.Remove(session.CallID)
 		return
 	}

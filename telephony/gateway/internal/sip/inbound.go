@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"gateway/internal/call"
-	"gateway/internal/recording"
+	"gateway/internal/webhook"
 	gw "gateway/internal/webrtc"
 
 	"github.com/emiago/sipgo/sip"
@@ -85,7 +85,7 @@ func (s *Server) handleInvite(req *sip.Request, tx sip.ServerTransaction) {
 		return
 	}
 
-	if err := s.webhook.Send("call.incoming", map[string]any{
+	if err := s.webhook.Send(webhook.EventIncoming, map[string]any{
 		"call_id":      callID,
 		"from":         from,
 		"to":           to,
@@ -95,7 +95,7 @@ func (s *Server) handleInvite(req *sip.Request, tx sip.ServerTransaction) {
 		log.Error().Err(err).Str("call_id", callID).Msg("failed to send call.incoming webhook")
 	}
 
-	// Block until an accept/reject action arrives or the dialog is cancelled.
+	// Block until an accept/reject action arrives or the dialog/session is cancelled.
 	for {
 		select {
 		case action := <-session.InboundOps:
@@ -112,6 +112,8 @@ func (s *Server) handleInvite(req *sip.Request, tx sip.ServerTransaction) {
 			close(action.Result)
 			return
 		case <-dlg.Context().Done():
+			log.Info().Str("call_id", session.CallID).Msg("dialog cancelled")
+			s.terminateSession(session, "remote-canceled")
 			return
 		}
 	}
@@ -171,23 +173,9 @@ func (s *Server) answerInbound(session *call.Session, browserSDP string) error {
 		return fmt.Errorf("set remote description: %w", err)
 	}
 
-	conn, err := net.ListenPacket("udp4", ":0")
+	sipSDP, err := setupAcceptedCall(session, s.cfg)
 	if err != nil {
-		return fmt.Errorf("open RTP socket: %w", err)
-	}
-	session.RTPConn = conn
-
-	localPort := conn.LocalAddr().(*net.UDPAddr).Port
-	sipSDP := generateSIPSDP(s.cfg.EffectiveIP(), localPort)
-
-	session.SetStatus(call.StatusAccepted)
-	session.StartedAt = time.Now()
-
-	recorder := recording.NewRecorder(s.cfg.RecordingDir, session.CallID)
-	if err := recorder.Start(); err != nil {
-		log.Warn().Err(err).Str("call_id", session.CallID).Msg("failed to start recording")
-	} else {
-		session.Recorder = recorder
+		return err
 	}
 
 	if err := session.InboundDlg.RespondSDP([]byte(sipSDP)); err != nil {
@@ -202,7 +190,7 @@ func (s *Server) answerInbound(session *call.Session, browserSDP string) error {
 	log.Info().Str("call_id", session.CallID).Msg("inbound call accepted")
 
 	go func(callID, phoneNumber string) {
-		if err := s.webhook.Send("call.accepted", map[string]any{
+		if err := s.webhook.Send(webhook.EventAccepted, map[string]any{
 			"call_id":      callID,
 			"phone_number": phoneNumber,
 		}); err != nil {
@@ -214,8 +202,6 @@ func (s *Server) answerInbound(session *call.Session, browserSDP string) error {
 }
 
 func (s *Server) rejectInboundInvite(session *call.Session) error {
-	session.SetStatus(call.StatusRejected)
-
 	if err := session.InboundDlg.Respond(sip.StatusBusyHere, "Busy Here", nil); err != nil {
 		if session.IsTerminal() {
 			return nil
@@ -225,7 +211,6 @@ func (s *Server) rejectInboundInvite(session *call.Session) error {
 	}
 
 	log.Info().Str("call_id", session.CallID).Msg("inbound call rejected")
-	session.Close()
-	s.registry.Remove(session.CallID)
+	s.terminateSession(session, "agent-rejected")
 	return nil
 }

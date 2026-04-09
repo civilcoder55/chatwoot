@@ -29,7 +29,7 @@ const (
 )
 
 // StartMediaBridge launches bidirectional RTP forwarding between SIP and WebRTC.
-func StartMediaBridge(ctx context.Context, session *call.Session, _ *recording.Recorder) {
+func StartMediaBridge(ctx context.Context, session *call.Session) {
 	log.Info().Str("call_id", session.CallID).Msg("starting RTP bridge")
 	session.StartSIPToWebRTC(func() {
 		go sipToWebRTC(ctx, session)

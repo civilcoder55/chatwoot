@@ -67,3 +67,24 @@ func TestClientSendNetworkError(t *testing.T) {
 		t.Error("expected error for network failure")
 	}
 }
+
+func TestRecordingURL(t *testing.T) {
+	tests := []struct {
+		name     string
+		url      string
+		expected string
+	}{
+		{"events suffix", "http://localhost:3000/webhooks/sip_gateway/events", "http://localhost:3000/webhooks/sip_gateway/recordings"},
+		{"no events suffix", "http://localhost:3000/webhooks/sip_gateway", "http://localhost:3000/webhooks/sip_gateway/recordings"},
+		{"trailing slash", "http://localhost:3000/webhooks/events/", "http://localhost:3000/webhooks/recordings"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := NewClient(tt.url, "secret")
+			if got := c.recordingURL(); got != tt.expected {
+				t.Errorf("recordingURL() = %q, want %q", got, tt.expected)
+			}
+		})
+	}
+}

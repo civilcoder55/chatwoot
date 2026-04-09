@@ -22,7 +22,7 @@ services:
       GATEWAY_HTTP_PORT: "80"
       GATEWAY_STUN_SERVER: "stun:stun.l.google.com:19302"
       GATEWAY_RECORDING_DIR: "/recordings"
-      GATEWAY_PUBLIC_IP: "192.168.107.3"
+      GATEWAY_BIND_ADDR: "192.168.107.3"
       WEBHOOK_URL: "http://rails:3000/webhooks/sip_gateway/events"
       WEBHOOK_SECRET: "test"
       SIP_SERVER_HOST: "192.168.107.2"

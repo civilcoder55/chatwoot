@@ -76,12 +76,8 @@ func parsePort(s string) int {
 }
 
 // localPhoneNumber returns the phone number that belongs to the local SIP channel.
-// For inbound calls that is the "to" number; for outbound calls the "from" number.
 func localPhoneNumber(session *call.Session) string {
-	if session.Direction == call.DirectionInbound {
-		return session.To
-	}
-	return session.From
+	return session.LocalPhoneNumber()
 }
 
 // callIDValue extracts the Call-ID header value from a SIP request.

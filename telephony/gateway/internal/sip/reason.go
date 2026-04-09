@@ -6,6 +6,14 @@ import (
 	"gateway/internal/call"
 )
 
+// Initiator identifies who initiated a hangup.
+type Initiator string
+
+const (
+	InitiatorAgent  Initiator = "agent"
+	InitiatorRemote Initiator = "remote"
+)
+
 // sipFailureReason maps SIP failure status codes to human-readable reasons.
 func sipFailureReason(code int) string {
 	switch code {
@@ -28,14 +36,14 @@ func sipFailureReason(code int) string {
 
 // hangupReason returns a descriptive reason string based on who initiated the
 // hangup and whether the call was already connected.
-func hangupReason(initiator string, connected bool) string {
+func hangupReason(initiator Initiator, connected bool) string {
 	switch initiator {
-	case "agent":
+	case InitiatorAgent:
 		if connected {
 			return "agent-hangup"
 		}
 		return "agent-canceled"
-	case "remote":
+	case InitiatorRemote:
 		if connected {
 			return "remote-hangup"
 		}

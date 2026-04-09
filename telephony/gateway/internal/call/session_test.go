@@ -42,3 +42,33 @@ func TestSessionIsTerminal(t *testing.T) {
 		t.Error("expected terminal for ended session")
 	}
 }
+
+func TestSessionIsInboundOutbound(t *testing.T) {
+	inbound := &Session{Direction: DirectionInbound}
+	if !inbound.IsInbound() {
+		t.Error("expected IsInbound() = true")
+	}
+	if inbound.IsOutbound() {
+		t.Error("expected IsOutbound() = false for inbound session")
+	}
+
+	outbound := &Session{Direction: DirectionOutbound}
+	if !outbound.IsOutbound() {
+		t.Error("expected IsOutbound() = true")
+	}
+	if outbound.IsInbound() {
+		t.Error("expected IsInbound() = false for outbound session")
+	}
+}
+
+func TestSessionLocalPhoneNumber(t *testing.T) {
+	inbound := &Session{Direction: DirectionInbound, From: "+111", To: "+222"}
+	if got := inbound.LocalPhoneNumber(); got != "+222" {
+		t.Errorf("inbound LocalPhoneNumber() = %q, want +222", got)
+	}
+
+	outbound := &Session{Direction: DirectionOutbound, From: "+111", To: "+222"}
+	if got := outbound.LocalPhoneNumber(); got != "+111" {
+		t.Errorf("outbound LocalPhoneNumber() = %q, want +111", got)
+	}
+}

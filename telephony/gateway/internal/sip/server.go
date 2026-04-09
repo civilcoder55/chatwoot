@@ -21,9 +21,6 @@ import (
 const (
 	// userAgentName is the SIP User-Agent header value.
 	userAgentName = "sip-gateway"
-
-	// clientBindAddress is the local address for the SIP client socket.
-	clientBindAddress = "192.168.1.6:5085"
 )
 
 // Server handles SIP signaling for inbound and outbound calls.

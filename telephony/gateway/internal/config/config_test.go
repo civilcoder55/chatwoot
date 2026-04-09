@@ -47,15 +47,30 @@ func TestEffectiveIP(t *testing.T) {
 }
 
 func TestHTTPAddr(t *testing.T) {
-	cfg := &Config{PublicIP: "10.0.0.1", HTTPPort: "9090"}
-	if got := cfg.HTTPAddr(); got != "10.0.0.1:9090" {
-		t.Errorf("HTTPAddr() = %q, want %q", got, "10.0.0.1:9090")
+	cfg := &Config{BindAddr: "0.0.0.0", HTTPPort: "9090"}
+	if got := cfg.HTTPAddr(); got != "0.0.0.0:9090" {
+		t.Errorf("HTTPAddr() = %q, want %q", got, "0.0.0.0:9090")
 	}
 }
 
 func TestSIPAddr(t *testing.T) {
-	cfg := &Config{PublicIP: "10.0.0.1", SIPPort: "5080"}
-	if got := cfg.SIPAddr(); got != "10.0.0.1:5080" {
-		t.Errorf("SIPAddr() = %q, want %q", got, "10.0.0.1:5080")
+	cfg := &Config{BindAddr: "0.0.0.0", SIPPort: "5080"}
+	if got := cfg.SIPAddr(); got != "0.0.0.0:5080" {
+		t.Errorf("SIPAddr() = %q, want %q", got, "0.0.0.0:5080")
+	}
+}
+
+func TestBindAddr(t *testing.T) {
+	os.Unsetenv(EnvBindAddr)
+	cfg := Load()
+	if cfg.BindAddr != DefaultBindAddr {
+		t.Errorf("BindAddr = %q, want %q", cfg.BindAddr, DefaultBindAddr)
+	}
+
+	os.Setenv(EnvBindAddr, "192.168.1.1")
+	defer os.Unsetenv(EnvBindAddr)
+	cfg = Load()
+	if cfg.BindAddr != "192.168.1.1" {
+		t.Errorf("BindAddr = %q, want %q", cfg.BindAddr, "192.168.1.1")
 	}
 }

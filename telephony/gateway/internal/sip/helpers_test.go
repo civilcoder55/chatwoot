@@ -1,6 +1,9 @@
 package sip
 
-import "testing"
+import (
+	"gateway/internal/call"
+	"testing"
+)
 
 func TestExtractPhone(t *testing.T) {
 	tests := []struct {
@@ -96,6 +99,18 @@ func TestParsePort(t *testing.T) {
 				t.Errorf("parsePort(%q) = %d, want %d", tt.input, got, tt.expected)
 			}
 		})
+	}
+}
+
+func TestLocalPhoneNumber(t *testing.T) {
+	inbound := &call.Session{Direction: call.DirectionInbound, From: "+111", To: "+222"}
+	if got := localPhoneNumber(inbound); got != "+222" {
+		t.Errorf("localPhoneNumber(inbound) = %q, want +222", got)
+	}
+
+	outbound := &call.Session{Direction: call.DirectionOutbound, From: "+111", To: "+222"}
+	if got := localPhoneNumber(outbound); got != "+111" {
+		t.Errorf("localPhoneNumber(outbound) = %q, want +111", got)
 	}
 }
 

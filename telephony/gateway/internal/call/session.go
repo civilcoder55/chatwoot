@@ -87,3 +87,12 @@ func (s *Session) IsInbound() bool {
 func (s *Session) IsOutbound() bool {
 	return s.Direction == DirectionOutbound
 }
+
+// LocalPhoneNumber returns the phone number belonging to the local tenant.
+// For inbound calls that is the "to" number; for outbound calls the "from" number.
+func (s *Session) LocalPhoneNumber() string {
+	if s.Direction == DirectionInbound {
+		return s.To
+	}
+	return s.From
+}

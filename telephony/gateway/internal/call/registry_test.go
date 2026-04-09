@@ -78,3 +78,50 @@ func TestRegistryRangeEarlyStop(t *testing.T) {
 		t.Errorf("Range with early stop visited %d sessions, want 1", count)
 	}
 }
+
+func TestRegistryGetBySIPCallID(t *testing.T) {
+	r := NewRegistry()
+	s := &Session{CallID: "gw-1", SIPCallID: "sip-abc@host"}
+	r.Add(s)
+
+	got := r.GetBySIPCallID("sip-abc@host")
+	if got == nil {
+		t.Fatal("expected to find session by SIP Call-ID")
+	}
+	if got.CallID != "gw-1" {
+		t.Errorf("CallID = %q, want gw-1", got.CallID)
+	}
+
+	if r.GetBySIPCallID("nonexistent") != nil {
+		t.Error("expected nil for unknown SIP Call-ID")
+	}
+}
+
+func TestRegistryIndexSIPCallID(t *testing.T) {
+	r := NewRegistry()
+	s := &Session{CallID: "gw-1"}
+	r.Add(s)
+
+	// SIP Call-ID not known at Add time
+	if r.GetBySIPCallID("sip-later") != nil {
+		t.Error("expected nil before IndexSIPCallID")
+	}
+
+	r.IndexSIPCallID("gw-1", "sip-later")
+	got := r.GetBySIPCallID("sip-later")
+	if got == nil || got.CallID != "gw-1" {
+		t.Error("expected to find session after IndexSIPCallID")
+	}
+}
+
+func TestRegistryRemoveCleansUpSIPIndex(t *testing.T) {
+	r := NewRegistry()
+	s := &Session{CallID: "gw-1", SIPCallID: "sip-1"}
+	r.Add(s)
+
+	r.Remove("gw-1")
+
+	if r.GetBySIPCallID("sip-1") != nil {
+		t.Error("expected SIP Call-ID index to be cleaned up after Remove")
+	}
+}

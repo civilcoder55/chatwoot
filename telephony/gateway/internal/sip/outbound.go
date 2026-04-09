@@ -9,7 +9,7 @@ import (
 
 	"gateway/internal/bridge"
 	"gateway/internal/call"
-	"gateway/internal/recording"
+	"gateway/internal/webhook"
 
 	"github.com/emiago/sipgo"
 	"github.com/emiago/sipgo/sip"
@@ -61,7 +61,9 @@ func (s *Server) SendInvite(ctx context.Context, session *call.Session) error {
 	}
 
 	session.OutboundDlg = dialog
-	session.SIPCallID = callIDValue(dialog.InviteRequest)
+	sipCallID := callIDValue(dialog.InviteRequest)
+	session.SIPCallID = sipCallID
+	s.registry.IndexSIPCallID(session.CallID, sipCallID)
 
 	inviteCtx, inviteCancel := context.WithTimeout(ctx, inviteTimeout)
 	go func() {
@@ -85,7 +87,7 @@ func (s *Server) handleOutboundAnswer(ctx context.Context, session *call.Session
 
 			if (code == sip.StatusRinging || code == sipStatusSessionProgress) && !ringingNotified {
 				ringingNotified = true
-				if err := s.webhook.Send("call.ringing", map[string]any{
+				if err := s.webhook.Send(webhook.EventRinging, map[string]any{
 					"call_id":      session.CallID,
 					"phone_number": localPhoneNumber(session),
 				}); err != nil {
@@ -106,32 +108,26 @@ func (s *Server) handleOutboundAnswer(ctx context.Context, session *call.Session
 		return
 	}
 
-	session.SIPCallID = callIDValue(dialog.InviteRequest)
-
 	if remoteIP, remotePort := parseSDPMedia(string(dialog.InviteResponse.Body())); remoteIP != "" && remotePort > 0 {
 		session.RTPAddr = &net.UDPAddr{IP: net.ParseIP(remoteIP), Port: remotePort}
 	}
 
-	session.SetStatus(call.StatusAccepted)
-	session.StartedAt = time.Now()
-
-	recorder := recording.NewRecorder(s.cfg.RecordingDir, session.CallID)
-	if err := recorder.Start(); err != nil {
-		log.Warn().Err(err).Str("call_id", session.CallID).Msg("failed to start recording")
-	} else {
-		session.Recorder = recorder
+	if _, err := setupAcceptedCall(session, s.cfg); err != nil {
+		log.Error().Err(err).Str("call_id", session.CallID).Msg("failed to set up accepted outbound call")
+		s.terminateSession(session, "setup-failed")
+		return
 	}
 
 	log.Info().Str("call_id", session.CallID).Msg("outbound call answered")
 
-	if err := s.webhook.Send("call.answered", map[string]any{
+	if err := s.webhook.Send(webhook.EventAnswered, map[string]any{
 		"call_id":      session.CallID,
 		"phone_number": localPhoneNumber(session),
 	}); err != nil {
 		log.Error().Err(err).Str("call_id", session.CallID).Msg("failed to send call.answered webhook")
 	}
 
-	bridge.StartMediaBridge(session.Ctx, session, session.Recorder)
+	bridge.StartMediaBridge(session.Ctx, session)
 }
 
 func (s *Server) handleOutboundError(session *call.Session, err error) {
@@ -147,7 +143,7 @@ func (s *Server) handleOutboundError(session *call.Session, err error) {
 	case errors.Is(err, context.DeadlineExceeded):
 		reason = "no-answer"
 	case errors.Is(err, context.Canceled):
-		reason = hangupReason("agent", false)
+		reason = hangupReason(InitiatorAgent, false)
 	case errors.As(err, &dialogErr):
 		code := int(dialogErr.Res.StatusCode)
 		reason = sipFailureReason(code)

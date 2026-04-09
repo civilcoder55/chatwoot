@@ -18,11 +18,11 @@ const (
 	EnvWebhookSecret = "WEBHOOK_SECRET"
 	EnvSIPServerHost = "SIP_SERVER_HOST"
 	EnvSIPServerPort = "SIP_SERVER_PORT"
-	EnvPublicIP      = "GATEWAY_PUBLIC_IP"
 	EnvICETCPPort    = "GATEWAY_ICE_TCP_PORT"
 	EnvICETCPAddr    = "GATEWAY_ICE_TCP_ADDR"
 	EnvICENATIP      = "GATEWAY_ICE_NAT_IP"
 	EnvTenantsFile   = "GATEWAY_TENANTS_FILE"
+	EnvBindAddr      = "GATEWAY_BIND_ADDR"
 )
 
 // Default configuration values.
@@ -35,12 +35,12 @@ const (
 	DefaultWebhookSecret = "test"
 	DefaultSIPServerHost = "127.0.0.1"
 	DefaultSIPServerPort = "5060"
-	DefaultPublicIP      = "127.0.0.1"
 	DefaultICETCPPort    = 9565
 	DefaultFallbackIP    = "0.0.0.0"
 	DefaultICETCPAddr    = "0.0.0.0"
 	DefaultICENATIP      = ""
 	DefaultTenantsFile   = "tenants.yaml"
+	DefaultBindAddr      = "0.0.0.0"
 )
 
 // Config holds all gateway configuration values.
@@ -58,6 +58,7 @@ type Config struct {
 	ICETCPAddr    string
 	ICENATIP      string
 	TenantsFile   string
+	BindAddr      string
 }
 
 // Load reads configuration from environment variables, falling back to defaults.
@@ -71,11 +72,11 @@ func Load() *Config {
 		WebhookSecret: envOr(EnvWebhookSecret, DefaultWebhookSecret),
 		SIPServerHost: envOr(EnvSIPServerHost, DefaultSIPServerHost),
 		SIPServerPort: envOr(EnvSIPServerPort, DefaultSIPServerPort),
-		PublicIP:      envOr(EnvPublicIP, DefaultPublicIP),
 		ICETCPPort:    envOrInt(EnvICETCPPort, DefaultICETCPPort),
 		ICETCPAddr:    envOr(EnvICETCPAddr, DefaultICETCPAddr),
 		ICENATIP:      envOr(EnvICENATIP, DefaultICENATIP),
 		TenantsFile:   envOr(EnvTenantsFile, DefaultTenantsFile),
+		BindAddr:      envOr(EnvBindAddr, DefaultBindAddr),
 	}
 
 	cfg.log()
@@ -90,14 +91,14 @@ func (c *Config) EffectiveIP() string {
 	return DefaultFallbackIP
 }
 
-// HTTPAddr returns the full HTTP listen address (ip:port).
+// HTTPAddr returns the full HTTP listen address (bind_addr:port).
 func (c *Config) HTTPAddr() string {
-	return c.PublicIP + ":" + c.HTTPPort
+	return c.BindAddr + ":" + c.HTTPPort
 }
 
-// SIPAddr returns the full SIP listen address (ip:port).
+// SIPAddr returns the full SIP listen address (bind_addr:port).
 func (c *Config) SIPAddr() string {
-	return c.PublicIP + ":" + c.SIPPort
+	return c.BindAddr + ":" + c.SIPPort
 }
 
 func (c *Config) log() {

@@ -2,6 +2,7 @@
 package tenant
 
 import (
+	"crypto/subtle"
 	"fmt"
 	"os"
 	"sync"
@@ -65,7 +66,7 @@ func (s *Store) FindByPhone(phone string) *Tenant {
 // Authenticate checks that the phone number exists and the api key matches.
 func (s *Store) Authenticate(phone, secret string) *Tenant {
 	t := s.FindByPhone(phone)
-	if t != nil && t.Key == secret {
+	if t != nil && subtle.ConstantTimeCompare([]byte(t.Key), []byte(secret)) == 1 {
 		return t
 	}
 	return nil
