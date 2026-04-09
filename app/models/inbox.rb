@@ -158,6 +158,10 @@ class Inbox < ApplicationRecord
     channel_type == 'Channel::Whatsapp'
   end
 
+  def sip?
+    channel_type == 'Channel::Sip'
+  end
+
   def twilio_whatsapp?
     channel_type == 'Channel::TwilioSms' && channel.medium == 'whatsapp'
   end

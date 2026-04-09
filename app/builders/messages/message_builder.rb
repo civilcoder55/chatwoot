@@ -3,6 +3,8 @@ class Messages::MessageBuilder
   include ::EmailHelper
   include ::DataHelper
 
+  INCOMING_ALLOWED_CHANNEL_TYPES = %w[Channel::Api Channel::Sip].freeze
+
   attr_reader :message
 
   def initialize(user, conversation, params)
@@ -96,8 +98,8 @@ class Messages::MessageBuilder
   end
 
   def message_type
-    if @conversation.inbox.channel_type != 'Channel::Api' && @message_type == 'incoming'
-      raise StandardError, 'Incoming messages are only allowed in Api inboxes'
+    if @message_type == 'incoming' && INCOMING_ALLOWED_CHANNEL_TYPES.exclude?(@conversation.inbox.channel_type)
+      raise StandardError, 'Incoming messages are only allowed in supported inboxes'
     end
 
     @message_type

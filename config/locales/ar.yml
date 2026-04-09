@@ -263,6 +263,22 @@ ar:
         issue_created: 'Linear issue %{issue_id} was created by %{user_name}'
         issue_linked: 'Linear issue %{issue_id} was linked by %{user_name}'
         issue_unlinked: 'Linear issue %{issue_id} was unlinked by %{user_name}'
+      sip_call:
+        party_caller: 'المتصل'
+        party_recipient: 'المستلم'
+        call_id: '%{call_id}'
+        agent_answered: '%{user_name} رد علي المكالمة'
+        agent_rejected: '%{user_name} رفض المكالمة'
+        agent_canceled: '%{user_name} ألغى المكالمة'
+        agent_hangup: '%{user_name} انهي المكالمة'
+        remote_canceled: '%{party} ألغى المكالمة'
+        remote_hangup: '%{party} انهي المكالمة'
+        busy: '%{party} مشغول'
+        remote_rejected: '%{party} رفض المكالمة'
+        no_answer: 'لم يتم الرد على المكالمة'
+        not_found: '%{party} لا يمكن الوصول إليه'
+        service_unavailable: 'فشل المكالمة بسبب مشاكل في الخدمة'
+        failed: 'فشل المكالمة'
       csat:
         not_sent_due_to_messaging_window: 'CSAT survey not sent due to outgoing message restrictions'
       auto_resolve:

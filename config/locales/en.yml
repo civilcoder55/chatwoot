@@ -277,6 +277,22 @@ en:
         issue_created: 'Linear issue %{issue_id} was created by %{user_name}'
         issue_linked: 'Linear issue %{issue_id} was linked by %{user_name}'
         issue_unlinked: 'Linear issue %{issue_id} was unlinked by %{user_name}'
+      sip_call:
+        party_caller: 'Caller'
+        party_recipient: 'Recipient'
+        call_id: '%{call_id}'
+        agent_answered: '%{user_name} answered the call'
+        agent_rejected: '%{user_name} rejected the call'
+        agent_canceled: '%{user_name} canceled the call'
+        agent_hangup: '%{user_name} ended the call'
+        remote_canceled: '%{party} canceled the call'
+        remote_hangup: '%{party} ended the call'
+        busy: '%{party} was busy'
+        remote_rejected: '%{party} rejected the call'
+        no_answer: 'The call was not answered'
+        not_found: '%{party} could not be reached'
+        service_unavailable: 'Call failed because the service was unavailable'
+        failed: 'Call failed'
       csat:
         not_sent_due_to_messaging_window: 'CSAT survey not sent due to outgoing message restrictions'
       auto_resolve:
