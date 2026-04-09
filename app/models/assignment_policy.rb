@@ -7,8 +7,8 @@
 #  conversation_priority    :integer          default("earliest_created"), not null
 #  description              :text
 #  enabled                  :boolean          default(TRUE), not null
-#  fair_distribution_limit  :integer          default(100), not null
-#  fair_distribution_window :integer          default(3600), not null
+#  fair_distribution_limit  :integer          default(1), not null
+#  fair_distribution_window :integer          default(60), not null
 #  name                     :string(255)      not null
 #  created_at               :datetime         not null
 #  updated_at               :datetime         not null

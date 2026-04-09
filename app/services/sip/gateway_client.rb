@@ -30,7 +30,7 @@ class Sip::GatewayClient
   private
 
   def post(path, body)
-    url = ENV.fetch('SIP_GATEWAY_URL', nil)
+    url = ENV.fetch('SIP_GATEWAY_URL', 'http://gateway.local')
     raise StandardError, 'SIP_GATEWAY_URL not configured' if url.blank?
 
     response = HTTParty.post(

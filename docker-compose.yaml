@@ -14,6 +14,11 @@ services:
     stdin_open: true
     image: chatwoot:development
     env_file: .env
+    extra_hosts:
+      - "gateway.local:192.168.107.3"
+    networks:
+      - telephony_sip_gateway
+      - default
 
   rails:
     <<: *base
@@ -92,7 +97,7 @@ services:
     environment:
       - POSTGRES_DB=chatwoot
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=
+      - POSTGRES_PASSWORD=postgres
 
   redis:
     image: redis:alpine
@@ -117,3 +122,8 @@ volumes:
   node_modules:
   cache:
   bundle:
+
+
+networks:
+  telephony_sip_gateway:
+    external: true

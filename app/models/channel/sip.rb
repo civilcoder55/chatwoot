@@ -1,3 +1,19 @@
+# == Schema Information
+#
+# Table name: channel_sip
+#
+#  id              :bigint           not null, primary key
+#  phone_number    :string           not null
+#  provider_config :jsonb            not null
+#  created_at      :datetime         not null
+#  updated_at      :datetime         not null
+#  account_id      :integer          not null
+#
+# Indexes
+#
+#  index_channel_sip_on_account_id    (account_id)
+#  index_channel_sip_on_phone_number  (phone_number) UNIQUE
+#
 class Channel::Sip < ApplicationRecord
   include Channelable
 
