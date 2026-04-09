@@ -1,6 +1,6 @@
 services:
   asterisk:
-    image: andrius/asterisk:latest
+    image: andrius/asterisk:alpine-latest-20.5.2
     volumes:
       - ./asterisk/configs/extensions.conf:/etc/asterisk/extensions.conf
       - ./asterisk/configs/pjsip.conf:/etc/asterisk/pjsip.conf

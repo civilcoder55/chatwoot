@@ -67,7 +67,6 @@ func NewServer(cfg *config.Config, registry *call.Registry, wh *webhook.Client, 
 	srv.OnInvite(s.handleInvite)
 	srv.OnAck(s.handleAck)
 	srv.OnBye(s.handleBye)
-	srv.OnCancel(s.handleCancel)
 
 	return s, nil
 }
